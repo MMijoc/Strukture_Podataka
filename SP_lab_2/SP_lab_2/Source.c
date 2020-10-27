@@ -19,6 +19,7 @@
 #define BUFFER_LENGTH 1024
 #define SUCCESS 0
 #define FAILURE (-1)
+#define CLEAR_SCREEN "cls"
 
 typedef struct _person {
 	char name[BUFFER_LENGTH];
@@ -27,6 +28,7 @@ typedef struct _person {
 
 	struct _person *next;
 } person;
+
 
 person *CreateNewNode(char *name, char *lastName, int birthYear);
 int InsertAtHead(person *head, person *nodeToInsert);
@@ -44,33 +46,11 @@ person *InputFromUser();
 
 int main()
 {
-	person Head = { .name = "HEAD",.lastName = "HEAD",.birthYear = 0,.next = NULL };
-
 	int isError = 0;
 
+	isError = SelectMenu();
 
-	person *tmp = NULL;
-	tmp = InputFromUser();
-	PrintPerson(tmp);
-
-
-	//isError = InsertAtHead(&Head, CreateNewNode("Dennis", "Ritchie", 1941));
-	//isError = InsertAtHead(&Head, CreateNewNode("Christopher", "Tolkien", 1924));
-	//isError = InsertAtHead(&Head, CreateNewNode("Piet", "Mondrian", 1872));
-	//isError = InsertAtHead(&Head, CreateNewNode("Gordon", "Freeman", 1972));
-	//isError = InsertAtHead(&Head, CreateNewNode("Christoph", "Waltz", 1956));
-	//isError = InsertAtHead(&Head, CreateNewNode("Joe", "Satriani", 1956));
-	//isError = InsertAtHead(&Head, CreateNewNode("Bruce", "Dickinson", 1958));
-	//isError = InsertAtHead(&Head, CreateNewNode("Marko", "Mijoc", 1999));
-	//isError = InsertAtTail(&Head, CreateNewNode("Irene", "Jansen", 1983));
-	//isError = InsertAtHead(&Head, CreateNewNode("Floor", "Jansen", 1981));
-	//
-	//if (isError) return FAILURE;
-
-	//PrintList(Head);
-
-
-	return SUCCESS;
+	return isError;
 }
 
 person *CreateNewNode(char *name, char *lastName, int birthYear)
@@ -218,7 +198,6 @@ int PrintMenu()
 	printf("4 -> Izbrisi po prezimenu\n");
 	printf("5 -> Ispis na ekran\n");
 	printf("\n\tExit -> Izlaz iz programa\n");
-	printf("\nIzbor: ");
 
 	return SUCCESS;
 }
@@ -226,38 +205,52 @@ int PrintMenu()
 int SelectMenu()
 {
 	char select[BUFFER_LENGTH] = { '\0' };
+	char tmpBuffer[BUFFER_LENGTH] = { '\0' };
 	int isError = 0;
+	int numArg = 0;
 	person Head = { .name = "HEAD",.lastName = "HEAD",.birthYear = 0,.next = NULL };
 
 	while (true) {
 		if (isError) return FAILURE;
-		if (_stricmp(select, "0") == 0) {
 
+		PrintMenu();
+		do {
+			printf("Izbor: ");
+			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+			strtok(tmpBuffer, "\n");
+			numArg = sscanf(tmpBuffer, "%s", select);
+		} while (numArg < 0);
 
-		}
-		else if (strcmp(select, "1") == 0) {
+		if (strcmp(select, "1") == 0) {
+			isError = InsertAtHead(&Head, InputFromUser());
 
-		}
-		else if (strcmp(select, "2") == 0) {
+		} else if (strcmp(select, "2") == 0) {
+			isError = InsertAtTail(&Head, InputFromUser());
 
-		}
-		else if (strcmp(select, "3") == 0) {
+		} else if (strcmp(select, "3") == 0) {
+			printf("Unesite prezime koje pretrazujete: ");
+			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+			strtok(tmpBuffer, "\n");
+			FindByLastName(Head, tmpBuffer);
 
-		}
-		else if (strcmp(select, "4") == 0) {
+		} else if (strcmp(select, "4") == 0) {
+			printf("Unesite prezime koje pretrazujete: ");
+			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+			strtok(tmpBuffer, "\n");
+			RemovePerson(&Head, tmpBuffer);
 
-		}
-		else if (strcmp(select, "5") == 0) {
+		} else if (strcmp(select, "5") == 0) {
+			PrintList(Head);
 
-		}
-		else if (_stricmp(select, "exit") == 0) {
+		} else if (_stricmp(select, "exit") == 0) {
 			break;
-		}
-		else {
-			printf("Nepoznata naredba \"%s\"", select);
-			continue;
+		} else {
+			printf("Nepoznata naredba: \"%s\"", select);
 		}
 
+		printf("\nPress any key to continue . . .");
+		fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+		system(CLEAR_SCREEN);
 	}
 
 	return SUCCESS;
@@ -281,7 +274,7 @@ person *InputFromUser()
 
 	newPerson = CreateNewNode(name, lastName, birthYear);
 	if (newPerson == NULL) {
-		PrintError(NULL);
+		PrintError("Memory allocation failed");
 		return NULL;
 	}
 
