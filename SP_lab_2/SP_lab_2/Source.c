@@ -42,7 +42,7 @@ int PrintMenu();
 int SelectMenu();
 int PrintError(char *errorMessage);
 person *InputFromUser();
-
+int DeleteList(person *head);
 
 int main()
 {
@@ -197,7 +197,7 @@ int PrintMenu()
 	printf("3 -> Pronadji po prezimenu\n");
 	printf("4 -> Izbrisi po prezimenu\n");
 	printf("5 -> Ispis na ekran\n");
-	printf("\n\tExit -> Izlaz iz programa\n");
+	printf("\tExit -> Izlaz iz programa\n");
 
 	return SUCCESS;
 }
@@ -253,6 +253,8 @@ int SelectMenu()
 		system(CLEAR_SCREEN);
 	}
 
+	DeleteList(&Head);
+
 	return SUCCESS;
 }
 
@@ -291,5 +293,19 @@ int PrintError(char *errorMessage)
 		fprintf(stderr, errorMessage);
 
 	}
+	return SUCCESS;
+}
+
+int DeleteList(person *head)
+{
+	person *toFree = head->next;
+	person *tmp = NULL;
+
+	while (toFree) {
+		tmp = toFree->next;
+		free(toFree);
+		toFree = tmp;
+	}
+	head->next = NULL;
 	return SUCCESS;
 }
