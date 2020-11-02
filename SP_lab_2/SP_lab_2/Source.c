@@ -234,7 +234,7 @@ int SelectMenu()
 			FindByLastName(Head, tmpBuffer);
 
 		} else if (strcmp(select, "4") == 0) {
-			printf("Unesite prezime koje pretrazujete: ");
+			printf("Unesite prezime osobe koju zelite izbrisati: ");
 			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
 			strtok(tmpBuffer, "\n");
 			RemovePerson(&Head, tmpBuffer);
