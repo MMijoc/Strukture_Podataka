@@ -1,0 +1,11 @@
+Dennis,Ritchie,1941
+John Ronald Reuel,Tolkien,1892
+Christopher,Tolkien,1924
+Piet,Mondrian,1872
+Gordon,Freeman,1972
+Christoph,Waltz,1956
+Joe,Satriani,1956
+Bruce,Dickinson,1958
+Irene,Jansen,1983
+Floor,Jansen,1981
+Marko,Mijoc,1999
