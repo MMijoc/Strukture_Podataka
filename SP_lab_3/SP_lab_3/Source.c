@@ -36,22 +36,25 @@ typedef struct _person {
 } person;
 
 
-person *CreateNewNode(char *name, char *lastName, int birthYear);
-int InsertAtHead(person *head, person *nodeToInsert);
-int InsertAtTail(person *head, person *nodeToInsert);
-person *FindTail(person *head);
-int PrintList(person head);
-int PrintPerson(person *P);
-int FindByLastName(person head, char *lastName);
-int RemovePerson(person *head, char *lastName);
 int PrintMenu();
 int SelectMenu();
+int PrintList(person head);
+int PrintPerson(person *P);
 int PrintError(char *errorMessage);
+int ConsoleInput(const char *message, char *buffer, size_t bufferSize);
+person *CreateNewNode(char *name, char *lastName, int birthYear);
 person *InputFromUser();
-int DeleteList(person *head);
-
+person *FindByLastName(person *position, char *lastName);
+person *FindPrevious(person *head, char *lastName);
+person *FindTail(person *head);
+int InsertNode(person *position, person *nodeToInsert);
+int InsertAtHead(person *head, person *nodeToInsert);
+int InsertAtTail(person *head, person *nodeToInsert);
+int InsertBefore(person *head, person *nodeToInsert);
 int InputFromFile(char *fileName, person *position);
-
+int PrintToFile(person *head, char *fileName);
+int RemovePerson(person *head, char *lastName);
+int DeleteList(person *head);
 
 int main()
 {
@@ -60,142 +63,6 @@ int main()
 	isError = SelectMenu();
 
 	return isError;
-}
-
-person *CreateNewNode(char *name, char *lastName, int birthYear)
-{
-	person *newNode = NULL;
-
-	newNode = (person *)malloc(sizeof(person));
-	if (newNode == NULL) {
-		perror("ERROR");
-		return NULL;
-	}
-
-	strcpy(newNode->name, name);
-	strcpy(newNode->lastName, lastName);
-	newNode->birthYear = birthYear;
-	newNode->next = NULL;
-
-	return newNode;
-}
-
-int InsertAtHead(person *head, person *nodeToInsert)
-{
-	if (nodeToInsert == NULL) return FAILURE;
-
-	if (head->next != NULL)
-		nodeToInsert->next = head->next;
-	head->next = nodeToInsert;
-
-	return SUCCESS;
-}
-
-int InsertAtTail(person *head, person *nodeToInsert)
-{
-	person *tail = NULL;
-
-	tail = FindTail(head);
-	if (tail == NULL)//head.next == NULL
-		return InsertAtHead(head, nodeToInsert);
-
-	tail->next = nodeToInsert;
-
-	return SUCCESS;
-}
-
-person *FindTail(person *head)
-{
-	person *tmp = head->next;
-
-	if (tmp == NULL) return NULL;
-	while (tmp->next)
-		tmp = tmp->next;
-
-	return tmp;
-}
-
-int PrintList(person head)
-{
-	person *tmp = head.next;
-
-	while (tmp) {
-		PrintPerson(tmp);
-		tmp = tmp->next;
-	}
-
-	return SUCCESS;
-}
-
-int PrintPerson(person *P)
-{
-	if (P == NULL) return FAILURE;
-
-	printf("\n%-32s %-32s %-8d", P->name, P->lastName, P->birthYear);
-	return SUCCESS;
-}
-
-int FindByLastName(person head, char* lastName)
-{
-	person *tmp = head.next;
-	int sameLastName = 0;
-	while (tmp) {
-		if (strcmp(tmp->lastName, lastName) == 0) {
-			PrintPerson(tmp);
-			sameLastName++;
-		}
-		tmp = tmp->next;
-	}
-
-	if (sameLastName == 0)
-		printf("\nNe postoji osoba s prezimenom \"%s\"", lastName);
-
-	return sameLastName;
-}
-
-int RemovePerson(person *head, char *lastName)
-{
-	person *tmp = head->next;
-	person *toFree = NULL;
-	person *prev = tmp;
-	char select[BUFFER_LENGTH];
-	int exits = 0;
-
-
-	while (tmp) {
-
-		if (strcmp(tmp->lastName, lastName) == 0) {
-			printf("\nJeste li sigurni da zelite obrisati:");
-			PrintPerson(tmp);
-			printf("\n\tUnesite Y za da, blio koju tipku za ne:\n\tUnos: ");
-			scanf(" %s", select);
-			if (strcmp(select, "Y") == 0) {
-				exits = 1;
-				if (head->next == tmp) {
-					head->next = tmp->next;
-					toFree = tmp;
-					tmp = tmp->next;
-					free(toFree);
-				} else {
-					prev->next = tmp->next;
-					toFree = tmp;
-					tmp = tmp->next;
-					free(toFree);
-				}
-			}
-
-		} else {
-			prev = tmp;
-			if (tmp)
-				tmp = tmp->next;
-		}
-
-	}
-
-	if (!exits)
-		printf("Ne postoji nit jedna osoba s prezimenom \"%s\"\n", lastName);
-
-	return SUCCESS;
 }
 
 int PrintMenu()
@@ -228,12 +95,11 @@ int SelectMenu()
 	char tmpBuffer[BUFFER_LENGTH] = { '\0' };
 	int isError = 0;
 	int numArg = 0;
+	person *tmp = NULL;
 	person Head = { "HEAD", "HEAD", 0, NULL };
 
 	while (1) {
 		if (isError) return FAILURE;
-
-		memset(tmpBuffer, '\0', BUFFER_LENGTH);
 
 		PrintMenu();
 		do {
@@ -247,32 +113,48 @@ int SelectMenu()
 			isError = InsertAtHead(&Head, InputFromUser());
 
 		} else if (strcmp(select, "2") == 0) {
-
+			isError = InsertBefore(&Head, InputFromUser());
 
 		} else if (strcmp(select, "3") == 0) {
+			ConsoleInput("Unesite prezime osobe nakon koje zelite unijeti novu osobu: ", tmpBuffer, BUFFER_LENGTH);
+			tmp = FindByLastName(Head.next, tmpBuffer);
+			if (tmp == NULL) {
+				printf("Ne postoji osoba s prezimenom \"%S\"", tmpBuffer);
+				continue;
+			}
+			isError = InsertNode(tmp, InputFromUser());
 			
-
 		} else if (strcmp(select, "4") == 0) {
 			isError = InsertAtTail(&Head, InputFromUser());
 
 		} else if (strcmp(select, "5") == 0) {
-			//strcpy(tmpBuffer, "studenti");
-			printf("Unesite ime datoteke: ");
-			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
-			strtok(tmpBuffer, "\n");
+			strcpy(tmpBuffer, "studenti");
+			//ConsoleInput("Unesite ime datoteke: ", tmpBuffer, BUFFER_LENGTH);
 			InputFromFile(tmpBuffer, &Head);
 
 		} else if (strcmp(select, "6") == 0) {
-			printf("Unesite prezime koje pretrazujete: ");
-			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
-			strtok(tmpBuffer, "\n");
-			FindByLastName(Head, tmpBuffer);
+			if (Head.next == NULL) {
+				printf("Can not search emty lsit!");
+				continue;
+			}
+
+			ConsoleInput("Unesite prezime koje pretrazujete: ", tmpBuffer, BUFFER_LENGTH);
+			tmp = NULL;
+			tmp = FindByLastName(Head.next, tmpBuffer);
+			if (tmp == NULL) {
+				printf("Ne postoji niti jedan osoba s imenom \"%s\"", tmpBuffer);
+				continue;
+			} else {
+				printf("Osoba(e) s prezimenom \"%s\"", tmpBuffer);
+				while (tmp != NULL) {
+					PrintPerson(tmp);
+					tmp = FindByLastName(tmp->next, tmpBuffer);
+				}
+			}
 
 		} else if (strcmp(select, "7") == 0) {
-			printf("Unesite prezime po kojem zelite brisati: ");
-			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
-			strtok(tmpBuffer, "\n");
-			RemovePerson(&Head, tmpBuffer);
+			ConsoleInput("Unesite prezime po kojem zelite brisati: ", tmpBuffer, BUFFER_LENGTH);
+			isError = RemovePerson(&Head, tmpBuffer);
 
 		} else if (strcmp(select, "8") == 0) {
 
@@ -281,19 +163,13 @@ int SelectMenu()
 			PrintList(Head);
 
 		} else if (strcmp(select, "10") == 0) {
-			printf("Unesite ime datoteke: ");
-			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
-			strtok(tmpBuffer, "\n");
+			ConsoleInput("Unesite ime datoteke: ", tmpBuffer, BUFFER_LENGTH);
 			PrintToFile(&Head, tmpBuffer);
 
 		} else if (strcmp(select, "11") == 0) {
+			DeleteList(&Head);
 
-
-		} else if (strcmp(select, "0") == 0) {
-			//test option
-
-
-		}else if (_stricmp(select, "exit") == 0) {
+		} else if (_stricmp(select, "exit") == 0) {
 			break;
 		} else {
 			printf("Nepoznata naredba: \"%s\"", select);
@@ -309,38 +185,24 @@ int SelectMenu()
 	return SUCCESS;
 }
 
-person *InputFromUser()
+int PrintList(person head)
 {
-	char name[BUFFER_LENGTH] = { '\0' };
-	char lastName[BUFFER_LENGTH] = { '\0' };
-	char birthYear[BUFFER_LENGTH] = { '\0' };
-	int year = 0;
-	person *newPerson = NULL;
+	person *tmp = head.next;
 
-	printf("Unesite ime: ");
-	fgets(name, BUFFER_LENGTH - 1, stdin);
-	strtok(name, "\n");
-	printf("Unesite prezime: ");
-	fgets(lastName, BUFFER_LENGTH - 1, stdin);
-	strtok(lastName, "\n");
-	
-	//atoi nece prepoznat mjesovitu kombinaciju slova i broeva kao gresku npr 11aa je 11 ili 22aa33 je 22
-	do {
-		printf("Unesite godinu rodjenja: ");
-		fgets(birthYear, BUFFER_LENGTH - 1, stdin);
-		strtok(birthYear, "\n");
-		year = atoi(birthYear);
-		if (year == 0)
-			printf("\nNepravilan unos!\n");
-	} while (year == 0);
-
-	newPerson = CreateNewNode(name, lastName, year);
-	if (newPerson == NULL) {
-		PrintError("Memory allocation failed");
-		return NULL;
+	while (tmp) {
+		PrintPerson(tmp);
+		tmp = tmp->next;
 	}
 
-	return newPerson;
+	return SUCCESS;
+}
+
+int PrintPerson(person *P)
+{
+	if (P == NULL) return FAILURE;
+
+	printf("\n%-32s %-32s %-8d", P->name, P->lastName, P->birthYear);
+	return SUCCESS;
 }
 
 int PrintError(char *errorMessage)
@@ -356,18 +218,155 @@ int PrintError(char *errorMessage)
 	return SUCCESS;
 }
 
-int DeleteList(person *head)
+int ConsoleInput(const char *message, char *buffer, size_t bufferSize)
 {
-	person *toFree = head->next;
-	person *tmp = NULL;
+	if (message != NULL)
+		printf("%s", message);
+	memset(buffer, '\0', bufferSize);
+	fgets(buffer, bufferSize - 1, stdin);
+	strtok(buffer, "\n");
 
-	while (toFree) {
-		tmp = toFree->next;
-		free(toFree);
-		toFree = tmp;
-	}
-	head->next = NULL;
 	return SUCCESS;
+}
+
+person *CreateNewNode(char *name, char *lastName, int birthYear)
+{
+	person *newNode = NULL;
+
+	newNode = (person *)malloc(sizeof(person));
+	if (newNode == NULL) {
+		perror("ERROR");
+		return NULL;
+	}
+
+	strcpy(newNode->name, name);
+	strcpy(newNode->lastName, lastName);
+	newNode->birthYear = birthYear;
+	newNode->next = NULL;
+
+	return newNode;
+}
+
+person *InputFromUser()
+{
+	char name[BUFFER_LENGTH] = { '\0' };
+	char lastName[BUFFER_LENGTH] = { '\0' };
+	char birthYear[BUFFER_LENGTH] = { '\0' };
+	int year = 0;
+	person *newPerson = NULL;
+
+	ConsoleInput("Unesite ime: ", name, BUFFER_LENGTH);
+	ConsoleInput("Unesite prezime: ", lastName, BUFFER_LENGTH);
+	
+	//atoi nece prepoznat mjesovitu kombinaciju slova i broeva kao gresku npr 11aa je 11 ili 22aa33 je 22
+	do {
+		ConsoleInput("Unesite godinu rodjenja: ", birthYear, BUFFER_LENGTH);
+		year = atoi(birthYear);
+		if (year == 0)
+			printf("\nNepravilan unos!\n");
+	} while (year == 0);
+
+	newPerson = CreateNewNode(name, lastName, year);
+	if (newPerson == NULL) {
+		PrintError("Memory allocation failed");
+		return NULL;
+	}
+
+	return newPerson;
+}
+
+person *FindByLastName(person *position, char *lastName)
+{
+	person *tmp = NULL;
+	tmp = FindPrevious(position, lastName);
+	if (tmp == NULL) return NULL;
+	
+	tmp = tmp->next;
+	return tmp;
+}
+
+person *FindPrevious(person *position, char *lastName)
+{
+	person *tmp = position;
+	if (strcmp(tmp->lastName, lastName) == 0)
+		return tmp;
+
+	while (tmp->next) {
+		if (strcmp(tmp->next->lastName, lastName) == 0)
+			return tmp;
+		tmp = tmp->next;
+	}
+
+	return NULL;
+}
+
+person *FindTail(person *head)
+{
+	person *tmp = head->next;
+
+	if (tmp == NULL) return NULL;
+	while (tmp->next)
+		tmp = tmp->next;
+
+	return tmp;
+}
+
+int InsertNode(person *position, person *nodeToInsert)
+{
+	if (position == NULL) return FAILURE;
+
+	nodeToInsert->next = position->next;
+	position->next = nodeToInsert;
+
+	return SUCCESS;
+}
+
+int InsertAtHead(person *head, person *nodeToInsert)
+{
+	if (nodeToInsert == NULL) return FAILURE;
+
+	if (head->next != NULL)
+		nodeToInsert->next = head->next;
+	head->next = nodeToInsert;
+
+	return SUCCESS;
+}
+
+int InsertAtTail(person *head, person *nodeToInsert)
+{
+	person *tail = NULL;
+
+	tail = FindTail(head);
+	if (tail == NULL)//head.next == NULL
+		return InsertAtHead(head, nodeToInsert);
+
+	tail->next = nodeToInsert;
+
+	return SUCCESS;
+}
+
+int InsertBefore(person *head, person *nodeToInsert)
+{
+	char buffer[BUFFER_LENGTH];
+	person *tmp = NULL;
+	person *prev = NULL;
+	
+	if (head->next == NULL) {
+		PrintError("Can not insert before a preson if the list is empty");
+		return SUCCESS;
+	}
+
+	ConsoleInput("Unesite prezime osobe prije koje zelite unjeti novu osobu: ",buffer, BUFFER_LENGTH);;
+	prev = FindPrevious(head, buffer);
+	if (prev == NULL) {
+		printf("Ne postoji osoba s prezimenom \"%s\"", buffer);
+		return FAILURE;
+	}
+
+	if (strcmp(prev->lastName, head->next->lastName) == 0)
+		return InsertAtHead(head, nodeToInsert);
+
+	return InsertNode(prev, nodeToInsert);
 }
 
 int InputFromFile(char *fileName, person *head)
@@ -434,5 +433,65 @@ int PrintToFile(person *head, char *fileName)
 
 	fclose(fp);
 
+	return SUCCESS;
+}
+
+int RemovePerson(person *head, char *lastName)
+{
+	person *tmp = head->next;
+	person *toFree = NULL;
+	person *prev = tmp;
+	char select[BUFFER_LENGTH];
+	int exits = 0;
+
+
+	while (tmp) {
+		if (strcmp(tmp->lastName, lastName) == 0) {
+			exits = 1;
+			printf("\nJeste li sigurni da zelite obrisati:");
+			PrintPerson(tmp);
+			ConsoleInput("\n\tUnesite Y za da, blio koju tipku za ne:\n\tUnos: ", select, BUFFER_LENGTH);
+			if (strcmp(select, "Y") == 0) {
+				if (head->next == tmp) {
+					head->next = tmp->next;
+					toFree = tmp;
+					tmp = tmp->next;
+					free(toFree);
+				} else {
+					prev->next = tmp->next;
+					toFree = tmp;
+					tmp = tmp->next;
+					free(toFree);
+				}
+
+			} else {
+				prev = tmp;
+				tmp = tmp->next;
+			}
+
+		} else {
+			prev = tmp;
+			tmp = tmp->next;
+		}
+	
+	}
+
+	if (!exits)
+		printf("Ne postoji nit jedna osoba s prezimenom \"%s\"\n", lastName);
+
+	return SUCCESS;
+}
+
+int DeleteList(person *head)
+{
+	person *toFree = head->next;
+	person *tmp = NULL;
+
+	while (toFree) {
+		tmp = toFree->next;
+		free(toFree);
+		toFree = tmp;
+	}
+	head->next = NULL;
 	return SUCCESS;
 }
