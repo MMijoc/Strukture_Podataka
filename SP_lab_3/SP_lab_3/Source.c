@@ -57,8 +57,6 @@ int main()
 {
 	int isError = 0;
 
-	//FILE *fp = fopen("studenti.txt", "w");
-
 	isError = SelectMenu();
 
 	return isError;
@@ -224,7 +222,6 @@ int PrintMenu()
 	return SUCCESS;
 }
 
-
 int SelectMenu()
 {
 	char select[BUFFER_LENGTH] = { '\0' };
@@ -235,6 +232,8 @@ int SelectMenu()
 
 	while (1) {
 		if (isError) return FAILURE;
+
+		memset(tmpBuffer, '\0', BUFFER_LENGTH);
 
 		PrintMenu();
 		do {
@@ -257,7 +256,10 @@ int SelectMenu()
 			isError = InsertAtTail(&Head, InputFromUser());
 
 		} else if (strcmp(select, "5") == 0) {
-			strcpy(tmpBuffer, "studenti");
+			//strcpy(tmpBuffer, "studenti");
+			printf("Unesite ime datoteke: ");
+			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+			strtok(tmpBuffer, "\n");
 			InputFromFile(tmpBuffer, &Head);
 
 		} else if (strcmp(select, "6") == 0) {
@@ -279,7 +281,10 @@ int SelectMenu()
 			PrintList(Head);
 
 		} else if (strcmp(select, "10") == 0) {
-
+			printf("Unesite ime datoteke: ");
+			fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+			strtok(tmpBuffer, "\n");
+			PrintToFile(&Head, tmpBuffer);
 
 		} else if (strcmp(select, "11") == 0) {
 
@@ -398,6 +403,33 @@ int InputFromFile(char *fileName, person *head)
 
 		InsertAtTail(head, CreateNewNode(name, lastName, year));
 
+	}
+
+	fclose(fp);
+
+	return SUCCESS;
+}
+
+int PrintToFile(person *head, char *fileName)
+{
+	FILE *fp = NULL;
+	person *tmp = head->next;
+
+	if (strstr(fileName, ".txt") == NULL)
+		strcat(fileName, ".txt");
+
+	fp = fopen(fileName, "w");
+	if (fp == NULL) {
+		perror("ERROR");
+		return FAILURE;
+	}
+
+	while (tmp) {
+		fprintf(fp, "%s,%s,%d", tmp->name, tmp->lastName, tmp->birthYear);
+		tmp = tmp->next;
+		if (tmp)
+			fprintf(fp, "\n");
+	
 	}
 
 	fclose(fp);
