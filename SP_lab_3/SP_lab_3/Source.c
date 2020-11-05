@@ -47,6 +47,7 @@ person *InputFromUser();
 person *FindByLastName(person *position, char *lastName);
 person *FindPrevious(person *head, char *lastName);
 person *FindTail(person *head);
+int NumberOfElements(person *head);
 int InsertNode(person *position, person *nodeToInsert);
 int InsertAtHead(person *head, person *nodeToInsert);
 int InsertAtTail(person *head, person *nodeToInsert);
@@ -55,6 +56,8 @@ int InputFromFile(char *fileName, person *position);
 int PrintToFile(person *head, char *fileName);
 int RemovePerson(person *head, char *lastName);
 int DeleteList(person *head);
+int SortListByLastName(person **head);
+person *SwapListElements(person *x, person *y);
 
 int main()
 {
@@ -157,7 +160,7 @@ int SelectMenu()
 			isError = RemovePerson(&Head, tmpBuffer);
 
 		} else if (strcmp(select, "8") == 0) {
-
+			SortListByLastName(&(Head.next));
 
 		} else if (strcmp(select, "9") == 0) {
 			PrintList(Head);
@@ -309,6 +312,17 @@ person *FindTail(person *head)
 		tmp = tmp->next;
 
 	return tmp;
+}
+
+int NumberOfElements(person *head)
+{
+	int n = 0;
+	person *tmp = head->next;
+	while (tmp) {
+		n++;
+		tmp = tmp->next;
+	}
+	return n;
 }
 
 int InsertNode(person *position, person *nodeToInsert)
@@ -494,4 +508,41 @@ int DeleteList(person *head)
 	}
 	head->next = NULL;
 	return SUCCESS;
+}
+
+int SortListByLastName(person **head)
+{
+	int n = NumberOfElements(*head);
+	int swapped = 0;
+	person **h = NULL;
+	person *x = NULL;
+	person *y = NULL;
+	int i = 0, j = 0;
+
+	for (i = 0; i < n; i++) {
+		h = head;
+		swapped = 0;
+
+		for (j = 0; j < n - i; j++) {
+			x = *h;
+			y = x->next;
+			if (strcmp(x->lastName, y->lastName) > 0) {
+				*h = SwapListElements(x, y);
+				swapped = 1;
+			}
+			h = &(*h)->next;
+		}
+
+		if (swapped == 0)
+			break;
+	}
+	return SUCCESS;
+}
+
+person *SwapListElements(person *x, person *y)
+{
+	//previous and head must be linked outside of this function
+	x->next = y->next;
+	y->next = x;
+	return y;
 }

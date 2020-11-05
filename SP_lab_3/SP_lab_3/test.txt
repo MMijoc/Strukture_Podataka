@@ -1,7 +1,0 @@
-Dennis,Ritchie,1941
-Piet,Mondrian,1872
-Gordon,Freeman,1972
-Christoph,Waltz,1956
-Joe,Satriani,1956
-Bruce,Dickinson,1958
-Marko,Mijoc,1999
