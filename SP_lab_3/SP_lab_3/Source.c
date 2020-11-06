@@ -56,8 +56,7 @@ int InputFromFile(char *fileName, person *position);
 int PrintToFile(person *head, char *fileName);
 int RemovePerson(person *head, char *lastName);
 int DeleteList(person *head);
-int SortListByLastName(person **head);
-person *SwapListElements(person *x, person *y);
+int SortListByLastName(person *head);
 
 int main()
 {
@@ -131,8 +130,7 @@ int SelectMenu()
 			isError = InsertAtTail(&Head, InputFromUser());
 
 		} else if (strcmp(select, "5") == 0) {
-			strcpy(tmpBuffer, "studenti");
-			//ConsoleInput("Unesite ime datoteke: ", tmpBuffer, BUFFER_LENGTH);
+			ConsoleInput("Unesite ime datoteke: ", tmpBuffer, BUFFER_LENGTH);
 			InputFromFile(tmpBuffer, &Head);
 
 		} else if (strcmp(select, "6") == 0) {
@@ -160,7 +158,7 @@ int SelectMenu()
 			isError = RemovePerson(&Head, tmpBuffer);
 
 		} else if (strcmp(select, "8") == 0) {
-			SortListByLastName(&(Head.next));
+			SortListByLastName(&Head);
 
 		} else if (strcmp(select, "9") == 0) {
 			PrintList(Head);
@@ -510,39 +508,35 @@ int DeleteList(person *head)
 	return SUCCESS;
 }
 
-int SortListByLastName(person **head)
+int SortListByLastName(person *head)
 {
-	int n = NumberOfElements(*head);
-	int swapped = 0;
+	int i = 0, j = 0;
+	int n = 0, swapped = 0;
 	person **h = NULL;
 	person *x = NULL;
 	person *y = NULL;
-	int i = 0, j = 0;
 
-	for (i = 0; i < n; i++) {
-		h = head;
+	n = NumberOfElements(head);
+	for (i = 0; i < n - 1; i++) {
+		h = &(head->next);
 		swapped = 0;
 
-		for (j = 0; j < n - i; j++) {
+		for (j = 0; j < n - i - 1; j++) {
 			x = *h;
 			y = x->next;
 			if (strcmp(x->lastName, y->lastName) > 0) {
-				*h = SwapListElements(x, y);
+				x->next = y->next;
+				y->next = x;
+				*h = y; // head->next = y ili prethodni->next
 				swapped = 1;
 			}
-			h = &(*h)->next;
+			h = &(*h)->next; //za j = 0, *h pokaziva na prvi pravi element tj. Head->next
+					 //za  ostale iteraciji se pomicemo mjesto po mjesto od heada prema kraju liste
 		}
 
-		if (swapped == 0)
-			break;
+		if (swapped == 0) // ako se niti jedan element nije zamjeno u jenoj iteraciji to onda nuzno znaci da je lista sortirana
+			break; //sto znaci da je funkcija gotova
 	}
-	return SUCCESS;
-}
 
-person *SwapListElements(person *x, person *y)
-{
-	//previous and head must be linked outside of this function
-	x->next = y->next;
-	y->next = x;
-	return y;
+	return SUCCESS;
 }
