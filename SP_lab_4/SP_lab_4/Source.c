@@ -38,6 +38,8 @@ int main()
 	node poly1 = {0, 0, NULL};
 	node poly2 = {0, 0, NULL};
 	node result = {0, 0, NULL};
+	node result2 = {0, 0, NULL};
+
 
 	strcpy(tmpBuffer, "poly1");
 	InputFromFile(&poly1, tmpBuffer);
@@ -50,6 +52,10 @@ int main()
 
 	AddPoly(&poly1, &poly2, &result);
 	PrintList(&result);
+
+	MultiplyPoly(&poly1, &poly2, &result2);
+	PrintList(&result2);
+
 	
 	system("pause");
 	return SUCCESS;
@@ -228,9 +234,19 @@ int AddPoly(node *poly1, node *poly2, node *result)
 
 int MultiplyPoly(node *poly1, node *poly2, node *result)
 {
+	node *tmp = NULL;
 
+	poly1 = poly1->next;
+	tmp = poly2->next;
+	while (poly1) {
+		while (tmp) {
+			SortedInput(result, CreateNewNode(poly1->coeff * tmp->coeff, poly1->exp + tmp->exp));
+			tmp = tmp->next;
+		}
 
-
+		poly1 = poly1->next;
+		tmp = poly2->next;
+	}
 
 	return SUCCESS;
 }
