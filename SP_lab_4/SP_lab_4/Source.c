@@ -30,6 +30,7 @@ int InputFromString(node *head, char *buffer);
 int PrintList(node *head);
 int InsertAtPosition(node *position, node *nodeToInsert);
 int AddPoly(node *poly1, node *poly2, node *result);
+int MultiplyPoly(node *poly1, node *poly2, node *result);
 
 int main()
 {
@@ -38,10 +39,8 @@ int main()
 	node poly2 = {0, 0, NULL};
 	node result = {0, 0, NULL};
 
-
 	strcpy(tmpBuffer, "poly1");
 	InputFromFile(&poly1, tmpBuffer);
-
 
 	strcpy(tmpBuffer, "poly2");
 	InputFromFile(&poly2, tmpBuffer);
@@ -79,7 +78,7 @@ int SortedInput(node *head, node *nodeToInsert)
 	node *nextNode = NULL;
 
 	if (head == NULL || nodeToInsert == NULL) {
-		PrintError("Invalid function parameters");
+		PrintError("Invalid function parameters!");
 		return FAILURE;
 	}
 
@@ -92,9 +91,17 @@ int SortedInput(node *head, node *nodeToInsert)
 	while (tmp->next != NULL && tmp->next->exp < nodeToInsert->exp)
 		tmp = tmp->next;
 
-	//pod pretpostavkom da se nece nikad pojaviti dva elementa s istim exsponentima
-	//ili jos gore dva elementa s istim eksponentima i suprotinim koeficijentima (dakle 0)
-	//al to nije nigdje osigurano
+	if (tmp->next != NULL && nodeToInsert->exp == tmp->next->exp) {
+		tmp->next->coeff += nodeToInsert->coeff;
+		if (tmp->next->coeff == 0) {
+			node *toFree = tmp->next;
+			tmp->next = tmp->next->next;
+			free(toFree);
+		}
+
+		free(nodeToInsert);
+		return SUCCESS;
+	}
 
 	nodeToInsert->next = tmp->next;
 	tmp->next = nodeToInsert;
@@ -215,6 +222,15 @@ int AddPoly(node *poly1, node *poly2, node *result)
 		SortedInput(result, CreateNewNode(poly2->coeff, poly2->exp));
 		poly2 = poly2->next;
 	}
+
+	return SUCCESS;
+}
+
+int MultiplyPoly(node *poly1, node *poly2, node *result)
+{
+
+
+
 
 	return SUCCESS;
 }
