@@ -16,7 +16,6 @@
 #define BUFFER_LENGTH 1024
 
 typedef struct _node {
-
 	double coeff;
 	int exp;
 
@@ -30,17 +29,28 @@ int InputFromFile(node *head, char *fileName);
 int InputFromString(node *head, char *buffer);
 int PrintList(node *head);
 int InsertAtPosition(node *position, node *nodeToInsert);
+int AddPoly(node *poly1, node *poly2, node *result);
 
 int main()
 {
 	char tmpBuffer[BUFFER_LENGTH];
-	node Head = {0, 0, NULL};
+	node poly1 = {0, 0, NULL};
+	node poly2 = {0, 0, NULL};
+	node result = {0, 0, NULL};
 
 
 	strcpy(tmpBuffer, "poly1");
-	InputFromFile(&Head, tmpBuffer);
-	PrintList(&Head);
+	InputFromFile(&poly1, tmpBuffer);
 
+
+	strcpy(tmpBuffer, "poly2");
+	InputFromFile(&poly2, tmpBuffer);
+
+	PrintList(&poly1);
+	PrintList(&poly2);
+
+	AddPoly(&poly1, &poly2, &result);
+	PrintList(&result);
 	
 	system("pause");
 	return SUCCESS;
@@ -171,6 +181,40 @@ int PrintList(node *head)
 
 	}
 	puts("");
+
+	return SUCCESS;
+}
+
+int AddPoly(node *poly1, node *poly2, node *result)
+{
+	poly1 = poly1->next;
+	poly2 = poly2->next;
+
+	//polinomi su nuzno sortirani
+	while (poly1 != NULL && poly2 != NULL) {
+		if (poly1->exp == poly2->exp) {
+			SortedInput(result, CreateNewNode(poly1->coeff + poly2->coeff, poly1->exp));
+			poly1 = poly1->next;
+			poly2 = poly2->next;
+		} else if (poly1->exp < poly2->exp) {
+			SortedInput(result, CreateNewNode(poly1->coeff, poly1->exp));
+			poly1 = poly1->next;
+		} else {
+			SortedInput(result, CreateNewNode(poly2->coeff, poly2->exp));
+			poly2 = poly2->next;
+		}
+
+	}
+
+	while (poly1) {
+		SortedInput(result, CreateNewNode(poly1->coeff, poly1->exp));
+		poly1 = poly1->next;
+	}
+
+	while (poly2) {
+		SortedInput(result, CreateNewNode(poly2->coeff, poly2->exp));
+		poly2 = poly2->next;
+	}
 
 	return SUCCESS;
 }
