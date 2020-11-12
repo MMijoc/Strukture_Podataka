@@ -24,7 +24,7 @@ typedef struct _node {
 
 
 int PrintMenu();
-int SeectMenu();
+int SelectMenu();
 int PrintList(node *head);
 node *CreateNewNode(double coeff, int exp);
 int InsertAtPosition(node *position, node *nodeToInsert);
@@ -41,7 +41,7 @@ int PrintError(char *message);
 int main()
 {
 
-	return SeectMenu();
+	return SelectMenu();
 }
 
 int PrintMenu()
@@ -55,7 +55,7 @@ int PrintMenu()
 	return SUCCESS;
 }
 
-int SeectMenu()
+int SelectMenu()
 {
 	char tmpBuffer[BUFFER_LENGTH];
 	node poly1 = {0, 0, NULL};
@@ -119,7 +119,7 @@ int SeectMenu()
 			printf("\nNepoznata naredba \"%s\"", tmpBuffer);
 		}
 		
-		ConsoleInput("Press any key to continue . . .", tmpBuffer, BUFFER_LENGTH);
+		ConsoleInput("\nPress any key to continue . . .", tmpBuffer, BUFFER_LENGTH);
 		system("cls");
 		DeleteList(&result1);
 		DeleteList(&result2);
