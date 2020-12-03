@@ -28,14 +28,17 @@ int PrintList(node *head);
 int ConsoleInput(char *message, char *buffer, size_t bufferSize);
 int PrintError(char *message);
 int DeleteList(node *head);
+int SortedInput(node *head, node *nodeToInsert);
 int ListUnion(node *L1, node *L2, node *result);
+int ListIntersection(node *L1, node *L2, node *result);
 
 int main()
 {
 	char fileName[BUFFER_LENGTH];
 	node list1 = {0, NULL};
 	node list2 = {0, NULL};
-	node result = {0, NULL};
+	node result1 = {0, NULL};
+	node result2 = {0, NULL};
 
 	strcpy(fileName, "list1");
 	InputFromFile(&list1, fileName);
@@ -47,8 +50,12 @@ int main()
 	PrintList(&list2);
 	puts("");
 
-	ListUnion(&list1, &list2, &result);
-	PrintList(&result);
+	ListUnion(&list1, &list2, &result1);
+	PrintList(&result1);
+	puts("");
+
+	ListIntersection(&list1, &list2, &result2);
+	PrintList(&result2);
 	puts("");
 
 
@@ -205,6 +212,30 @@ int ListUnion(node *L1, node *L2, node *result)
 	while (tmp) {
 		SortedInput(result, CreateNewNode(tmp->value));
 		tmp = tmp->next;
+	}
+
+	return SUCCESS;
+}
+
+int ListIntersection(node *L1, node *L2, node *result)
+{
+	node *tmp1 = L1->next;
+	node *tmp2 = L2->next;
+
+	while (tmp1 && tmp2) {
+
+		if (tmp1->value > tmp2->value) {
+			tmp2 = tmp2->next;
+
+		} else if (tmp1->value < tmp2->value) {
+			tmp1 = tmp1->next;
+
+		} else {
+			result->next = CreateNewNode(tmp1->value);
+			result = result->next;
+			tmp1 = tmp1->next;
+			tmp2 = tmp2->next;
+		}
 	}
 
 	return SUCCESS;
