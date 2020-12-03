@@ -28,9 +28,29 @@ int PrintList(node *head);
 int ConsoleInput(char *message, char *buffer, size_t bufferSize);
 int PrintError(char *message);
 int DeleteList(node *head);
+int ListUnion(node *L1, node *L2, node *result);
 
 int main()
 {
+	char fileName[BUFFER_LENGTH];
+	node list1 = {0, NULL};
+	node list2 = {0, NULL};
+	node result = {0, NULL};
+
+	strcpy(fileName, "list1");
+	InputFromFile(&list1, fileName);
+	PrintList(&list1);
+	puts("");
+
+	strcpy(fileName, "list2");
+	InputFromFile(&list2, fileName);
+	PrintList(&list2);
+	puts("");
+
+	ListUnion(&list1, &list2, &result);
+	PrintList(&result);
+	puts("");
+
 
 	return SUCCESS;
 }
@@ -100,8 +120,7 @@ int InputFromString(node *head, char *buffer)
 		if (argTaken != 1)
 			break;
 		buffer += n;
-		//SortedInput(head, CreateNewNode(value));
-		printf("%d ", value);
+		SortedInput(head, CreateNewNode(value));
 	}
 
 	return SUCCESS;
@@ -140,5 +159,53 @@ int DeleteList(node *head)
 	}
 
 	head->next = NULL;
+	return SUCCESS;
+}
+
+int SortedInput(node *head, node *nodeToInsert)
+{
+	node *tmp = NULL;
+	node *nextNode = NULL;
+
+	if (head == NULL || nodeToInsert == NULL) {
+		PrintError("Invalid function parameters!");
+		return FAILURE;
+	}
+
+	if (head->next == NULL) {
+		head->next = nodeToInsert;
+		return SUCCESS;
+	}
+	
+	tmp = head;
+	while (tmp->next != NULL && tmp->next->value < nodeToInsert->value)
+		tmp = tmp->next;
+
+	if (tmp->next != NULL && nodeToInsert->value == tmp->next->value) {
+		free(nodeToInsert); //podrazumjeva da u istoj listi nema duplih vrijednosti
+		return SUCCESS;
+	}
+
+	nodeToInsert->next = tmp->next;
+	tmp->next = nodeToInsert;
+
+	return SUCCESS;
+}
+
+int ListUnion(node *L1, node *L2, node *result)
+{
+	node *tmp = L1->next;
+
+	while (tmp) {
+		SortedInput(result, CreateNewNode(tmp->value));
+		tmp = tmp->next;
+	}
+
+	tmp = L2->next;
+	while (tmp) {
+		SortedInput(result, CreateNewNode(tmp->value));
+		tmp = tmp->next;
+	}
+
 	return SUCCESS;
 }
