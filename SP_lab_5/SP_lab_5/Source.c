@@ -31,35 +31,14 @@ int DeleteList(node *head);
 int SortedInput(node *head, node *nodeToInsert);
 int ListUnion(node *L1, node *L2, node *result);
 int ListIntersection(node *L1, node *L2, node *result);
+int SelectMenu();
+int PrintMenu();
+
+
 
 int main()
 {
-	char fileName[BUFFER_LENGTH];
-	node list1 = {0, NULL};
-	node list2 = {0, NULL};
-	node result1 = {0, NULL};
-	node result2 = {0, NULL};
-
-	strcpy(fileName, "list1");
-	InputFromFile(&list1, fileName);
-	PrintList(&list1);
-	puts("");
-
-	strcpy(fileName, "list2");
-	InputFromFile(&list2, fileName);
-	PrintList(&list2);
-	puts("");
-
-	ListUnion(&list1, &list2, &result1);
-	PrintList(&result1);
-	puts("");
-
-	ListIntersection(&list1, &list2, &result2);
-	PrintList(&result2);
-	puts("");
-
-
-	return SUCCESS;
+	return SelectMenu();
 }
 
 node *CreateNewNode(int value)
@@ -82,10 +61,16 @@ int PrintList(node *head)
 {
 	node *tmp = head->next;
 
+	if (NULL == tmp) {
+		printf("Lista je prazna!");
+		return FAILURE;
+	}
+
 	while (tmp) {
 		printf("%d ", tmp->value);
 		tmp = tmp->next;
 	}
+	printf("\n");
 
 	return SUCCESS;
 }
@@ -239,4 +224,104 @@ int ListIntersection(node *L1, node *L2, node *result)
 	}
 
 	return SUCCESS;
+}
+
+int PrintMenu()
+{
+	printf("1 -> Unesi prvu listu iz datoteke\n");
+	printf("2 -> Unesi drugi listu iz datoteke\n");
+	printf("3 -> Unesi rucno prvu listu\n");
+	printf("4 -> Unesi rucno drugu listu\n");
+	printf("5 -> Unija listi\n");
+	printf("6 -> Presjek listi\n");
+	printf("\texit -> izlaz iz programa\n");
+
+	return SUCCESS;
+}
+
+int SelectMenu()
+{
+	char tmpBuffer[BUFFER_LENGTH];
+	node list1 = {0, NULL};
+	node list2 = {0, NULL};
+	node result1 = {0, NULL};
+	node result2 = {0, NULL};
+
+	while (1) {
+		PrintMenu();
+		ConsoleInput("Izbor: ", tmpBuffer, BUFFER_LENGTH);
+
+		if (strcmp(tmpBuffer, "1") == 0) {
+			ConsoleInput("Unesite ime datoteke u kojoj je zapisana prva lista: ", tmpBuffer, BUFFER_LENGTH);
+			if (list1.next != NULL)
+				DeleteList(&list1);
+			InputFromFile(&list1, tmpBuffer);
+		
+		} else if (strcmp(tmpBuffer, "2") == 0) {
+			ConsoleInput("Unesite ime datoteke u kojoj je zapisana druga lista: ", tmpBuffer, BUFFER_LENGTH);
+			if (list2.next != NULL)
+				DeleteList(&list2);
+			InputFromFile(&list2, tmpBuffer);
+		
+		} else if (strcmp(tmpBuffer, "3") == 0) {
+			ConsoleInput("Unesite prvu listu: ", tmpBuffer, BUFFER_LENGTH);
+			if (list2.next != NULL)
+				DeleteList(&list2);
+			InputFromString(&list1, tmpBuffer);
+			PrintList(&list1);
+
+		} else if (strcmp(tmpBuffer, "4") == 0) {
+			ConsoleInput("Unesite drugu listu: ", tmpBuffer, BUFFER_LENGTH);
+			if (list2.next != NULL)
+				DeleteList(&list2);
+			InputFromString(&list2, tmpBuffer);
+			PrintList(&list2);
+		
+		} else if (strcmp(tmpBuffer, "5") == 0) {
+			if (list1.next == NULL || list2.next == NULL) {
+				printf("Potrebno je unijeti obe liste!\n");
+
+			} else {
+				ListUnion(&list1, &list2, &result1);
+				printf("Prva lista: ");
+				PrintList(&list1);
+				printf("Druga lista: ");
+				PrintList(&list2);
+				printf("Unija: ");
+				PrintList(&result1);
+			}
+		
+		} else if (strcmp(tmpBuffer, "6") == 0) {
+			if (list1.next == NULL || list2.next == NULL) {
+				printf("Potrebno je unijeti obe liste!\n");				
+
+			} else {
+				ListIntersection(&list1, &list2, &result2);
+				printf("Prva lista: ");
+				PrintList(&list1);
+				printf("Druga lista: ");
+				PrintList(&list2);
+				printf("Presjek: ");
+				PrintList(&result2);
+			}
+		
+		
+		} else if (_strcmpi(tmpBuffer, "exit") == 0) {
+			DeleteList(&list1);
+			DeleteList(&list2);
+			return SUCCESS;
+		
+		} else {
+			printf("\nNepoznata naredba \"%s\"", tmpBuffer);
+		}
+		
+		ConsoleInput("\nPress any key to continue . . .", tmpBuffer, BUFFER_LENGTH);
+		system("cls");
+		DeleteList(&result1);
+		DeleteList(&result2);
+	
+	}
+
+
+	return FAILURE;
 }
