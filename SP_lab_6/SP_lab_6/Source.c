@@ -24,24 +24,46 @@ typedef struct _node {
 
 	struct _node *next;
 } node;
-typedef node* stack;
+
+typedef struct _queue {
+	node head;
+	node *tail;
+} queue;
 
 node *CreateNewNode(int value);
 int Push(node *stackHead, int value);
 int Pop(node *stackHead, int *result);
+int GetRandomNumber(int min, int max);
+void InitQueue(queue *q);
+int Enqueue(queue *q, int value);
+int Dequeue(queue *q, int *result);
 
 int main()
 {
-	node Stack = {0, NULL};
+	//node Stack = {0, NULL};
 	int i, tmp;
-	for (i = 0; i < 10; i++) {
-		Push(&Stack, i);
+	//for (i = 0; i < 10; i++) {
+	//	Push(&Stack, i);
+	//}
+
+	//for (i = 0; i <= 10; i++) {
+	//	Pop(&Stack, &tmp);
+	//	printf("%d ", tmp);
+	//}
+
+
+	queue Q;
+	InitQueue(&Q);
+	for (i = 1; i <= 10; i++) {
+		Enqueue(&Q, i);
 	}
 
-	for (i = 0; i <= 10; i++) {
-		Pop(&Stack, &tmp);
+
+	for (i = 1; i <= 10; i++) {
+		Dequeue(&Q, &tmp);
 		printf("%d ", tmp);
 	}
+
 
 	return SUCCESS;
 }
@@ -87,5 +109,54 @@ int Pop(node *stackHead, int *result)
 	stackHead->next = stackHead->next->next;
 	free(nodeToPop);
 
+	return SUCCESS;
+}
+
+int GetRandomNumber(int min, int max)
+{
+	return rand() % (max - min) + min;
+}
+
+void InitQueue(queue *q)
+{
+	q->head.next = NULL;
+	q->head.value = 0;
+	q->tail = NULL;
+}
+
+int Enqueue(queue *q, int value)
+{
+	node *nodeToEnqueue = NULL;
+	
+	nodeToEnqueue = CreateNewNode(value);
+	if (NULL == nodeToEnqueue) return FAILURE;
+
+	if (q->tail != NULL) {
+		q->tail->next = nodeToEnqueue;
+		q->tail = q->tail->next;
+	}
+
+	if (q->head.next == NULL) {
+		q->head.next = nodeToEnqueue;
+		q->tail = q->head.next;
+	}
+
+	return SUCCESS;
+}
+
+int Dequeue(queue *q, int *result)
+{
+	node *nodeToDequeue = NULL;
+
+	if (q->head.next == NULL) return FAILURE;
+
+	nodeToDequeue = q->head.next;
+	*result = nodeToDequeue->value;
+	q->head.next = nodeToDequeue->next;
+
+	if (q->head.next == NULL)
+		q->tail = NULL;
+
+	free(nodeToDequeue);
 	return SUCCESS;
 }
