@@ -40,31 +40,38 @@ int Dequeue(queue *q, int *result);
 
 int main()
 {
-	//node Stack = {0, NULL};
 	int i, tmp;
-	//for (i = 0; i < 10; i++) {
-	//	Push(&Stack, i);
-	//}
-
-	//for (i = 0; i <= 10; i++) {
-	//	Pop(&Stack, &tmp);
-	//	printf("%d ", tmp);
-	//}
-
-
+	node Stack = {0, NULL};
 	queue Q;
 	InitQueue(&Q);
-	for (i = 1; i <= 10; i++) {
-		Enqueue(&Q, i);
-	}
 
 
-	for (i = 1; i <= 10; i++) {
-		Dequeue(&Q, &tmp);
+	//srand(time(NULL));
+	printf("\n%-40s", "Numbers added to stack (in order): ");
+	for (i = 0; i < 10; i++) {
+		tmp = GetRandomNumber(10, 100);
+		Push(&Stack, tmp);
 		printf("%d ", tmp);
+
 	}
 
+	printf("\n%-40s", "Poping all numbers from stack: ");
+	while (Pop(&Stack, &tmp) == SUCCESS)
+		printf("%d ", tmp);
 
+
+
+	printf("\n%-40s", "Numbers added to queue (in order): ");
+	for (i = 0; i <= 10; i++) {
+		Enqueue(&Q, i);
+		printf("%d ", i);
+	}
+
+	printf("\n%-40s", "Removing all numbers from queue: ");
+	while (Dequeue(&Q, &tmp) == SUCCESS)
+		printf("%d ", tmp);
+
+	puts("");
 	return SUCCESS;
 }
 
@@ -100,10 +107,8 @@ int Push(node *stackHead, int value)
 int Pop(node *stackHead, int *result)
 {
 	node *nodeToPop = stackHead->next;
-	if (NULL == nodeToPop) {
-		printf("Stack is empty");
-		return FAILURE;
-	}
+	if (NULL == nodeToPop)	return FAILURE;
+
 
 	*result = nodeToPop->value;
 	stackHead->next = stackHead->next->next;
