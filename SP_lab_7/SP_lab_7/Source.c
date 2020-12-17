@@ -10,9 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <conio.h> 
 
 #define SUCCESS 0
 #define FAILURE (-1)
+#define TRUE 1
+
 
 #define BUFFER_LENGTH 1024
 
@@ -21,26 +24,29 @@ typedef struct _node {
 
 	struct _node *next;
 } node;
-
-typedef struct _queue {
-	node head;
-	node *tail;
-} queue;
+typedef node stack;
 
 node *CreateNewNode(double value);
 int Push(node *stackHead, double value);
 int Pop(node *stackHead, double *result);
 char *GetFileContent(char *fileName);
-int InputPostfixFromString(node *stackHead, char *postfix);
+int CalculatePostfix(node *stackHead, char *postfix);
+int CalculateFromStack(node *stackHead, char operation);
 
 int main()
 {
+	stack myStack = {0, NULL};
 	char fileName[BUFFER_LENGTH];
-	char *fileContent = NULL;
+	char *postfix = NULL;
+	double result;
 
 	strcpy(fileName, "postfix");
-	fileContent = GetFileContent(fileName);
-	printf("%s\n", fileContent);
+	postfix = GetFileContent(fileName);
+
+	printf("Postfix expression: %s\n", postfix);
+	CalculatePostfix(&myStack, postfix);
+	Pop(&myStack, &result);
+	printf("Result: %.3lf\n", result);
 
 	return SUCCESS;
 }
@@ -117,4 +123,71 @@ char *GetFileContent(char *fileName)
 	fclose(fp);
 
 	return fileContent;
+}
+
+int CalculatePostfix(node *stackHead, char *postfix)
+{
+	int argTaken = 0, n = 0;
+	double value = 0;
+	char operation;
+
+	while (TRUE) {
+		argTaken = sscanf(postfix, "%lf%n", &value, &n);
+
+		if (argTaken == 1) {
+			Push(stackHead, value);
+		} else {
+			argTaken = sscanf(postfix, "%c%n", &operation, &n);
+			if (argTaken == 1) {
+				CalculateFromStack(stackHead,operation);
+			} else {
+				break;
+			}
+		}
+
+		postfix += n;
+	}
+
+	return SUCCESS;
+
+
+}
+
+int CalculateFromStack(node *stackHead, char operation)
+{
+	double x, y, result;
+
+	switch (operation) {
+		case ' ':
+			return FAILURE;
+			break;
+		case '+':
+			Pop(stackHead, &y);
+			Pop(stackHead, &x);
+			result = x + y;
+			Push(stackHead, result);
+			break;
+		case '-':
+			Pop(stackHead, &y);
+			Pop(stackHead, &x);
+			result = x - y;
+			Push(stackHead, result);
+			break;
+		case '*':
+			Pop(stackHead, &y);
+			Pop(stackHead, &x);
+			result = x * y;
+			Push(stackHead, result);
+			break;
+		case '/':
+			Pop(stackHead, &y);
+			Pop(stackHead, &x);
+			result = x / y;
+			Push(stackHead, result);
+			break;
+		default:
+			return FAILURE;	
+	}
+
+	return SUCCESS;
 }
