@@ -10,12 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h> 
 
 #define SUCCESS 0
 #define FAILURE (-1)
 #define TRUE 1
-
 
 #define BUFFER_LENGTH 1024
 
@@ -50,7 +48,6 @@ int main()
 
 	return SUCCESS;
 }
-
 
 node *CreateNewNode(double value)
 {
@@ -149,8 +146,6 @@ int CalculatePostfix(node *stackHead, char *postfix)
 	}
 
 	return SUCCESS;
-
-
 }
 
 int CalculateFromStack(node *stackHead, char operation)
