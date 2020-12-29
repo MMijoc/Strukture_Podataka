@@ -21,6 +21,8 @@ int main()
 int CommandLine()
 {
 	TreeNode rootDirectory = { NULL, NULL, NULL };
+	TreeNode *currentDirectory = &rootDirectory;
+	StackNode stack = {NULL, NULL};
 	int argumentsTaken = 0;
 	int offset = 0;
 	char *inputBuffer = NULL;
@@ -33,11 +35,11 @@ int CommandLine()
 	strcpy(path, "C:\\");
 
 	while (TRUE) {
-
 		memset(inputBuffer, 0, BUFFER_LENGTH);
 		memset(command, 0, BUFFER_LENGTH);
 		memset(commandArgument, 0, BUFFER_LENGTH);
 		argumentsTaken = 0;
+		offset = 0;
 
 		printf("%s>", path);
 		fgets(inputBuffer, BUFFER_LENGTH, stdin);
@@ -56,31 +58,35 @@ int CommandLine()
 			if (argumentsTaken == 1) {
 				puts("The syntax of the command is incorrect.\n");
 			} else {
-				MakeNewDirectory(&rootDirectory, commandArgument);
+				MakeNewDirectory(currentDirectory, commandArgument);
 				while (TRUE) {
 					int n = 0;
 					argumentsTaken = sscanf((inputBuffer + offset), "%s %n", commandArgument, &n);
 					if (argumentsTaken < 0)
 						break;
 					offset += n;
-					MakeNewDirectory(&rootDirectory, commandArgument);
+					MakeNewDirectory(currentDirectory, commandArgument);
 				}
 			}
 
+		} else if (_stricmp(command, "cd..") == 0) {
+			ReturnToPreviusDirectory(&currentDirectory, &rootDirectory, path, &stack);
 
 		} else if (_stricmp(command, "cd") == 0) {
-
-		} else if (_stricmp(command, "cd..") == 0) {
+			if (strcmp(commandArgument, "..") == 0)
+				ReturnToPreviusDirectory(&currentDirectory, &rootDirectory, path, &stack);
+			else
+				ChangeDirectory(&currentDirectory, commandArgument, path, &stack);
 
 		} else if (_stricmp(command, "dir") == 0) {
-			PrintDirectory(&rootDirectory);
+			PrintDirectory(currentDirectory);
+
 		} else if (_stricmp(command, "exit") == 0) {
+			FreeAllMemory(path, inputBuffer, command, commandArgument, &rootDirectory, &stack);
 			return SUCCESS;
 		} else {
-
-
+			printf("\n\'%s' is not recognized as an internal or external command, operable program or batch file.\n", command);
 		}
-
 	}
 
 
@@ -134,16 +140,15 @@ int Push(StackNode *stackHead, TreeNode *treeNode)
 	return SUCCESS;
 }
 
-int Pop(StackNode *stackHead, TreeNode *result)
+int Pop(StackNode *stackHead, TreeNode **result)
 {
 	StackNode *nodeToFree = NULL;
 
 	if (NULL == stackHead->next) {
-		result = NULL;
 		return FAILURE; // stack is empty
 	}
 
-	result = stackHead->next->treeNode;
+	*result = stackHead->next->treeNode;
 	nodeToFree = stackHead->next;
 	stackHead->next = stackHead->next->next;
 
@@ -254,13 +259,9 @@ int PrintHelp(char *command)
 int MakeNewDirectory(TreeNode *currentDirectory, char *newDirectoryName)
 {
 	TreeNode *newDirectory = NULL;
-	TreeNode *tmp = NULL;
+	TreeNode **tmp = NULL;
 
-	tmp = currentDirectory;
-	while (tmp->nextSibling != NULL && _stricmp(tmp->directoryName, newDirectoryName) < 0)
-		tmp = tmp->nextSibling;
-
-	if (tmp->nextSibling != NULL && _stricmp(tmp->directoryName, newDirectoryName) == 0) {
+	if (FindDirectory(currentDirectory, newDirectoryName) != NULL) {
 		printf("A subdirectory or file %s already exists.\n", newDirectoryName);
 		return FAILURE;
 	}
@@ -268,8 +269,17 @@ int MakeNewDirectory(TreeNode *currentDirectory, char *newDirectoryName)
 	newDirectory = CreateNewTreeNode(); if (NULL == newDirectory) return FAILURE;
 	if (SetDirectoryName(newDirectory, newDirectoryName) == FAILURE) return FAILURE;
 
-	newDirectory->nextSibling = tmp->nextSibling;
-	tmp->nextSibling = newDirectory;
+	if (currentDirectory->child == NULL) {
+		currentDirectory->child = newDirectory;
+		return SUCCESS;
+	}
+
+	tmp = &currentDirectory->child;
+	while (*tmp != NULL && _stricmp((*tmp)->directoryName, newDirectoryName) < 0)
+		tmp = &(*tmp)->nextSibling;
+
+	newDirectory->nextSibling = *tmp;
+	*tmp = newDirectory;
 
 	return SUCCESS;
 }
@@ -279,13 +289,13 @@ int PrintDirectory(TreeNode *currentDirectory)
 	TreeNode *tmp = NULL;
 	int numDir = 0;
 
-	if (currentDirectory->nextSibling == NULL) {
+	if (currentDirectory->child == NULL) {
 		printf("\n\t\t0 Dir(s)\n\n");
 		return SUCCESS;
 	}
 
-	tmp = currentDirectory->nextSibling;
-
+	tmp = currentDirectory->child;
+	
 	printf("\n");
 	while (tmp) {
 		printf("<DIR>          %s\n", tmp->directoryName);
@@ -294,5 +304,98 @@ int PrintDirectory(TreeNode *currentDirectory)
 	}
 	printf("\t\t%d Dir(s)\n\n", numDir);
 	
+	return SUCCESS;
+}
+
+int ChangeDirectory(TreeNode **currentDirectory, char *directoryName, char *path, StackNode *stackHead)
+{
+	TreeNode *tmp = NULL;
+
+	tmp = FindDirectory(*currentDirectory, directoryName);
+	if (tmp == NULL) {
+		printf("\nThe system cannot find the path specified.\n\n");
+		return FAILURE;
+	}
+
+	if (Push(stackHead, tmp) == FAILURE) return FAILURE;
+	*currentDirectory = tmp;
+	if (path[strlen(path) - 1] != '\\')
+		strcat(path, "\\");
+	strcat(path, directoryName);
+
+	return SUCCESS;
+}
+
+TreeNode *FindDirectory(TreeNode *currentDirectory, char *directoryName)
+{
+	TreeNode *tmp = NULL;
+
+	tmp = currentDirectory->child;
+	while (tmp) {
+		if (_strcmpi(tmp->directoryName, directoryName) == 0)
+			return tmp;
+
+		tmp = tmp->nextSibling;
+	}
+
+	return NULL;
+}
+
+int ReturnToPreviusDirectory(TreeNode **currentDirectory, TreeNode *rootDirectory, char *path, StackNode *stackHead)
+{
+	char *endOfPath = NULL;
+	TreeNode *dummy = NULL;
+	TreeNode *newCurrentDirectory = NULL;
+
+	Pop(stackHead, &dummy);
+	if(Pop(stackHead, &newCurrentDirectory) == FAILURE) {
+		*currentDirectory = rootDirectory;
+		strcpy(path, rootDirectory->directoryName);
+		strcat(path, "\\");
+		return SUCCESS;
+	}
+	*currentDirectory = newCurrentDirectory;
+	endOfPath = strrchr(path, '\\');
+	*endOfPath = '\0';
+
+	return SUCCESS;
+}
+
+int FreeBuffers(char *path, char *inputBuffer, char *command, char *commandArgument)
+{
+	free(path);
+	free(inputBuffer);
+	free(command);
+	free(commandArgument);
+
+	return SUCCESS;
+}
+
+int FreeTree(TreeNode *T)
+{
+	if (T == NULL) return;
+	FreeTree(T->child);
+	FreeTree(T->nextSibling);
+	free(T->directoryName);
+	free(T);
+
+	return SUCCESS;
+}
+
+int FreeStack(StackNode *S)
+{
+	if (S == NULL) return;
+	FreeStack(S->next);
+	free(S);
+
+	return SUCCESS;
+}
+
+int FreeAllMemory(char* path, char* inputBuffer, char* command, char* commandArgument, TreeNode* root, StackNode* stackHead)
+{
+	FreeBuffers(path, inputBuffer, command, command);
+	FreeStack(stackHead->next);
+	FreeTree(root->child);
+
 	return SUCCESS;
 }
