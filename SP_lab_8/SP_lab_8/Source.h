@@ -11,27 +11,28 @@
 #define TRUE 1
 
 typedef struct _TreeNode {
-	char* directoryName;
+	char *directoryName;
 
-	struct _TreeNode* child;
-	struct _TreeNode* nextSibling;
+	struct _TreeNode *child;
+	struct _TreeNode *nextSibling;
 } TreeNode;
 
 typedef struct _StackNode {
-	TreeNode* treeNode;
+	TreeNode *treeNode;
 
-	struct _StackNode* next;
+	struct _StackNode *next;
 } StackNode;
 
 
-TreeNode* CreateNewTreeNode();
-StackNode* CreateNewStackNode();
-int Push(StackNode* stackHead, TreeNode* treeNode);
-int Pop(StackNode* stackHead, TreeNode* result);
-int AllocateBuffers(char** path, char** inputBuffer, char** command, char** commandArgument);
+TreeNode *CreateNewTreeNode();
+StackNode *CreateNewStackNode();
+int Push(StackNode *stackHead, TreeNode *treeNode);
+int Pop(StackNode *stackHead, TreeNode *result);
+int AllocateBuffers(char **path, char **inputBuffer, char **command, char **commandArgument);
 int CommandLine();
-int SetDirectoryName(TreeNode* directory, char* directoryName);
-int PrintHelp(char* command);
-
-int PrintError(char* errorMessage);
-int ValidatePointer(int numberOfPointersPassed, char* errorMessage, ...);
+int SetDirectoryName(TreeNode *directory, char *directoryName);
+int PrintHelp(char *command);
+int MakeNewDirectory(TreeNode *currentDirectory, char *newDirectoryName);
+int PrintDirectory(TreeNode *currentDirectory);
+int PrintError(char *errorMessage);
+int ValidatePointer(int numberOfPointersPassed, char *errorMessage, ...);
