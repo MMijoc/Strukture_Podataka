@@ -5,13 +5,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#pragma once
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-
 #define SUCCESS 0
 #define FAILURE (-1)
 #define BUFFER_LENGTH 1024
