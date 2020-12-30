@@ -28,4 +28,5 @@ int PrintTreeInorder(BinTreeNode *node);
 int PrintTreePostorder(BinTreeNode *node);
 int DeleteNode(BinTreeNode *node, BinTreeNode *nodeToDelete);
 int FreeBinTree(BinTreeNode *node);
+int InputIntegerFromUser(char *message);
 int PrintError(char *message);
