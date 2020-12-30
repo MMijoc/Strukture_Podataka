@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
 #define SUCCESS 0
 #define FAILURE (-1)
@@ -20,12 +19,13 @@ typedef struct _binTreeNode {
 int PrintMenu();
 int SelectMenu();
 BinTreeNode *CreateNewBinTreeNode(int value);
-BinTreeNode *FindMaxValue(BinTreeNode *root);
-BinTreeNode *FindMinValue(BinTreeNode *root);
-BinTreeNode *FindByValue(BinTreeNode *root, int valueToFind);
-int PrintTreePreorder(BinTreeNode *root);
-int PrintInorder(BinTreeNode *root);
-int PrintTreePostorder(BinTreeNode *root);
-int DeleteNode(BinTreeNode *root, BinTreeNode *nodeToDelete);
-int FreeBinTree(BinTreeNode *root);
+BinTreeNode *FindMaxValue(BinTreeNode *node);
+BinTreeNode *FindMinValue(BinTreeNode *node);
+BinTreeNode *FindByValue(BinTreeNode *node, int valueToFind);
+int InsertElement(BinTreeNode **node, int value);
+int PrintTreePreorder(BinTreeNode *node);
+int PrintTreeInorder(BinTreeNode *node);
+int PrintTreePostorder(BinTreeNode *node);
+int DeleteNode(BinTreeNode *node, BinTreeNode *nodeToDelete);
+int FreeBinTree(BinTreeNode *node);
 int PrintError(char *message);

@@ -11,6 +11,7 @@
 
 int main()
 {
+	CreateNewBinTreeNode(5);
 	SelectMenu();
 	return 	SUCCESS;
 }
@@ -22,8 +23,8 @@ int PrintMenu()
 		"\n2 - Insert element"
 		"\n3 - Find max value"
 		"\n4 - Find min value"
-		"\n4 - Delete element by value"
-		"\n5 - Delete tree"
+		"\n5 - Delete element by value"
+		"\n6 - Delete tree"
 		"\nexit - Exit program"
 	);
 
@@ -32,10 +33,18 @@ int PrintMenu()
 
 int SelectMenu()
 {
+	BinTreeNode *root = NULL;
 	char tmpBuffer[BUFFER_LENGTH] = {'\0'};
 	char inputBuffer[BUFFER_LENGTH] = {'\0'};
 	char select[BUFFER_LENGTH] = {'\0'};
 	int argumentsTaken = 0;
+
+	// test data
+	int testNumbers[10];
+	int i = 0;
+	for (i = 0; i < 10; i++)
+		testNumbers[i] = rand() % 100;
+
 
 	while (TRUE) {
 
@@ -48,18 +57,28 @@ int SelectMenu()
 
 		} while (argumentsTaken < 0);
 
-
 		if (strcmp(select, "1") == 0) {
-		
+
+			for (i = 0; i < 10; i++)
+				printf("%d ", testNumbers[i]);
+			puts("");
+
+			for (i = 0; i < 10; i++)
+				InsertElement(&root, testNumbers[i]);
+
+
+			PrintTreeInorder(root);
+
+
+
+
 
 		} else if (strcmp(select, "2") == 0) {
 			
-
 		} else if (strcmp(select, "3") == 0) {
 		
 		} else if (strcmp(select, "4") == 0) {
 			
-
 		} else if (strcmp(select, "5") == 0) {
 			
 		} else if (strcmp(select, "6") == 0) {
@@ -77,4 +96,67 @@ int SelectMenu()
 		system("cls");
 	}
 
+}
+
+BinTreeNode *CreateNewBinTreeNode(int value)
+{
+	BinTreeNode *newNode = NULL;
+
+	newNode = (BinTreeNode *)malloc(sizeof(BinTreeNode));
+	if (newNode) {
+		newNode->left = NULL;
+		newNode->right = NULL;
+		newNode->value = value;
+		return newNode;
+
+	} else {
+		PrintError("Memory allocation failed");
+		return NULL;
+	}
+}
+
+int InsertElement(BinTreeNode **node, int valueToInsert)
+{
+	if (*node == NULL) {
+		BinTreeNode *nodeToInsert = NULL;
+		nodeToInsert = CreateNewBinTreeNode(valueToInsert);
+		if(nodeToInsert == NULL) return FAILURE;
+		*node = nodeToInsert;
+		return SUCCESS;
+
+	} else if (valueToInsert < (*node)->value) {
+		InsertElement(&(*node)->left, valueToInsert);
+
+	} else if (valueToInsert > (*node)->value) {
+		InsertElement(&(*node)->right, valueToInsert);
+
+	} else {
+		printf("\nElement with the value '%d' already exists in the binary tree!", valueToInsert);
+		return FAILURE;
+	}
+	return SUCCESS;
+}
+
+int PrintTreeInorder(BinTreeNode *node)
+{
+	if (node) {
+		PrintTreeInorder(node->left);
+		printf(" %d", node->value);
+		PrintTreeInorder( node->right);
+	}
+
+	return SUCCESS;
+}
+
+int PrintError(char *errorMessage)
+{
+	if (errorMessage == NULL) {
+		fprintf(stderr, "\nUnknown Error!");
+		return SUCCESS;
+	} else {
+		fprintf(stderr, "\n");
+		fprintf(stderr, errorMessage);
+	}
+
+	return SUCCESS;
 }
