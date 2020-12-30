@@ -1,7 +1,7 @@
 /*
  *Napisati program koji pomocu vezanih listi (stabala) predstavlja strukturu direktorija.
  *Omoguciti unos novih direktorija i pod-direktorija, ispis sadrzaja direktorija i povratak u prethodni direktorij.
- *Tocnije program treba preko menija simulirati koristenje DOS naredbi: 1- "md", 2 - "cd" "dir", 3 - "cd..", 4 - "dir" i 5 – izlaz.
+ *Tocnije program treba preko menija simulirati koristenje DOS naredbi: 1- "md", 2 - "cd" "dir", 3 - "cd..", 4 - "dir" i 5 - izlaz.
  */
 
 #ifdef _MSC_VER
@@ -12,8 +12,6 @@
 
 int main()
 {
-
-
 	CommandLine();
 	return 	SUCCESS;
 }
@@ -70,11 +68,13 @@ int CommandLine()
 			}
 
 		} else if (_stricmp(command, "cd..") == 0) {
-			ReturnToPreviusDirectory(&currentDirectory, &rootDirectory, path, &stack);
+			ReturnToPreviousDirectory(&currentDirectory, &rootDirectory, path, &stack);
 
 		} else if (_stricmp(command, "cd") == 0) {
 			if (strcmp(commandArgument, "..") == 0)
-				ReturnToPreviusDirectory(&currentDirectory, &rootDirectory, path, &stack);
+				ReturnToPreviousDirectory(&currentDirectory, &rootDirectory, path, &stack);
+			else if (argumentsTaken == 1)
+				printf("%s\n\n", path);
 			else
 				ChangeDirectory(&currentDirectory, commandArgument, path, &stack);
 
@@ -84,12 +84,171 @@ int CommandLine()
 		} else if (_stricmp(command, "exit") == 0) {
 			FreeAllMemory(path, inputBuffer, command, commandArgument, &rootDirectory, &stack);
 			return SUCCESS;
+
 		} else {
 			printf("\n\'%s' is not recognized as an internal or external command, operable program or batch file.\n", command);
 		}
 	}
 
+}
 
+int PrintHelp(char *command)
+{
+	if (command == NULL) {
+		puts(   "\nFor more information on a specific command, type HELP command - name"
+			"\nCD             Displays the name of or changes the current directory."
+			"\nDIR            Displays a list of files and subdirectories in a directory."
+			"\nHELP           Provides Help information for Windows commands."
+			"\nMD             Creates a directory.\n"
+		);
+		return SUCCESS;
+
+	} else if (_stricmp(command, "cd") == 0) {
+		puts(	"\nDisplays the name of or changes the current directory.\n"
+			"CD[directory name]\nCD[..]\n"
+			"\n  ..   Specifies that you want to change to the parent directory.\n"
+			"\nType CD without parameters to display the current drive and directory.\n"
+		);
+		return SUCCESS;
+
+	} else if (_stricmp(command, "dir") == 0) {
+		puts(   "\nDisplays a list of files and subdirectories in a directory.\n");
+		return SUCCESS;
+
+	} else if (_stricmp(command, "help") == 0) {
+		puts(	"\nProvides help information for Windows commands.\n"
+			"\nHELP [command]\n"
+			"\n    command - displays help information on that command.\n\n"
+		);
+		return SUCCESS;
+
+	} else if (_stricmp(command, "md") == 0) {
+		puts(   "\nCreates a directory.\n"	
+			"\nMKDIR [drive:]path\nMD[drive:]path\n\n"
+		);
+		return SUCCESS;
+
+	} else {
+		puts(   "\nThis command is not supported by the help utility.\n");
+		return FAILURE;
+	}
+}
+
+int MakeNewDirectory(TreeNode *currentDirectory, char *newDirectoryName)
+{
+	TreeNode *newDirectory = NULL;
+	TreeNode **tmp = NULL;
+
+	if (FindDirectory(currentDirectory, newDirectoryName) != NULL) {
+		printf("A subdirectory or file %s already exists.\n", newDirectoryName);
+		return FAILURE;
+	}
+
+	newDirectory = CreateNewTreeNode(); if (NULL == newDirectory) return FAILURE;
+	if (SetDirectoryName(newDirectory, newDirectoryName) == FAILURE) return FAILURE;
+
+	if (currentDirectory->child == NULL) {
+		currentDirectory->child = newDirectory;
+		return SUCCESS;
+	}
+
+	tmp = &currentDirectory->child;
+	while (*tmp != NULL && _stricmp((*tmp)->directoryName, newDirectoryName) < 0)
+		tmp = &(*tmp)->nextSibling;
+
+	newDirectory->nextSibling = *tmp;
+	*tmp = newDirectory;
+
+	return SUCCESS;
+}
+
+int SetDirectoryName(TreeNode *directory, char *directoryName)
+{
+	if (ValidatePointer(2, "Invalid function arguments", directory, directoryName)) return FAILURE;
+
+	directory->directoryName = (char *)malloc((strlen(directoryName) + 1) * sizeof(char));
+	if (ValidatePointer(1, "Failed to allocate memory for directory name", directory->directoryName)) return FAILURE;
+
+	strcpy(directory->directoryName, directoryName);
+
+	return SUCCESS;
+}
+
+int PrintDirectory(TreeNode *currentDirectory)
+{
+	TreeNode *tmp = NULL;
+	int numDir = 0;
+
+	if (currentDirectory->child == NULL) {
+		printf("\n\t\t0 Dir(s)\n\n");
+		return SUCCESS;
+	}
+
+	tmp = currentDirectory->child;
+	
+	printf("\n");
+	while (tmp) {
+		printf("<DIR>          %s\n", tmp->directoryName);
+		numDir++;
+		tmp = tmp->nextSibling;
+	}
+	printf("\t\t%d Dir(s)\n\n", numDir);
+	
+	return SUCCESS;
+}
+
+int ChangeDirectory(TreeNode **currentDirectory, char *directoryName, char *path, StackNode *stackHead)
+{
+	TreeNode *tmp = NULL;
+
+	tmp = FindDirectory(*currentDirectory, directoryName);
+	if (tmp == NULL) {
+		printf("\nThe system cannot find the path specified.\n\n");
+		return FAILURE;
+	}
+
+	if (Push(stackHead, tmp) == FAILURE) return FAILURE;
+	*currentDirectory = tmp;
+	if (path[strlen(path) - 1] != '\\')
+		strcat(path, "\\");
+	strcat(path, directoryName);
+
+	return SUCCESS;
+}
+
+int ReturnToPreviousDirectory(TreeNode **currentDirectory, TreeNode *rootDirectory, char *path, StackNode *stackHead)
+{
+	char *endOfPath = NULL;
+	TreeNode *dummy = NULL;
+	TreeNode *newCurrentDirectory = NULL;
+
+	Pop(stackHead, &dummy);
+	if(Pop(stackHead, &newCurrentDirectory) == FAILURE) {
+		*currentDirectory = rootDirectory;
+		strcpy(path, rootDirectory->directoryName);
+		strcat(path, "\\");
+		return SUCCESS;
+	}
+	*currentDirectory = newCurrentDirectory;
+	endOfPath = strrchr(path, '\\');
+	*endOfPath = '\0';
+
+	return SUCCESS;
+}
+
+TreeNode *FindDirectory(TreeNode *currentDirectory, char *directoryName)
+{
+	TreeNode *tmp = NULL;
+
+	tmp = currentDirectory->child;
+	while (tmp) {
+		if (_strcmpi(tmp->directoryName, directoryName) == 0)
+			return tmp;
+
+		tmp = tmp->nextSibling;
+	}
+
+	return NULL;
 }
 
 TreeNode *CreateNewTreeNode()
@@ -144,28 +303,14 @@ int Pop(StackNode *stackHead, TreeNode **result)
 {
 	StackNode *nodeToFree = NULL;
 
-	if (NULL == stackHead->next) {
+	if (NULL == stackHead->next)
 		return FAILURE; // stack is empty
-	}
 
 	*result = stackHead->next->treeNode;
 	nodeToFree = stackHead->next;
 	stackHead->next = stackHead->next->next;
 
 	free(nodeToFree);
-	return SUCCESS;
-}
-
-int PrintError(char *errorMessage)
-{
-	if (errorMessage == NULL) {
-		fprintf(stderr, "\nUnknown Error!");
-		return SUCCESS;
-	} else {
-		fprintf(stderr, "\n");
-		fprintf(stderr, errorMessage);
-	}
-
 	return SUCCESS;
 }
 
@@ -179,14 +324,54 @@ int AllocateBuffers(char **path, char **inputBuffer, char **command, char **comm
 	return ValidatePointer(4, "Memory allocation failed: failed to allocate memory for buffers", *path, *inputBuffer, *command, *commandArgument);
 }
 
-int SetDirectoryName(TreeNode *directory, char *directoryName)
+int FreeBuffers(char *path, char *inputBuffer, char *command, char *commandArgument)
 {
-	if (ValidatePointer(2, "Invalid function arguments", directory, directoryName)) return FAILURE;
+	free(path);
+	free(inputBuffer);
+	free(command);
+	free(commandArgument);
 
-	directory->directoryName = (char *)malloc(strlen(directoryName) * sizeof(char));
-	if (ValidatePointer(1, "Failed to allocate memory for directory name", directory->directoryName)) return FAILURE;
+	return SUCCESS;
+}
 
-	strcpy(directory->directoryName, directoryName);
+int FreeTree(TreeNode *T)
+{
+	if (T == NULL) return SUCCESS;
+	FreeTree(T->child);
+	FreeTree(T->nextSibling);
+	free(T->directoryName);
+	free(T);
+
+	return SUCCESS;
+}
+
+int FreeStack(StackNode *S)
+{
+	if (S == NULL) return SUCCESS;
+	FreeStack(S->next);
+	free(S);
+
+	return SUCCESS;
+}
+
+int FreeAllMemory(char* path, char* inputBuffer, char* command, char* commandArgument, TreeNode *root, StackNode* stackHead)
+{
+	FreeBuffers(path, inputBuffer, command, commandArgument);
+	FreeStack(stackHead->next);
+	FreeTree(root->child);
+
+	return SUCCESS;
+}
+
+int PrintError(char *errorMessage)
+{
+	if (errorMessage == NULL) {
+		fprintf(stderr, "\nUnknown Error!");
+		return SUCCESS;
+	} else {
+		fprintf(stderr, "\n");
+		fprintf(stderr, errorMessage);
+	}
 
 	return SUCCESS;
 }
@@ -210,192 +395,6 @@ int ValidatePointer(int numberOfPointersPassed, char *errorMessage, ...)
 		fprintf(stderr, " (%d null pointers passed)", numOfNulls);
 		return FAILURE;
 	}
-
-	return SUCCESS;
-}
-
-int PrintHelp(char *command)
-{
-	if (command == NULL) {
-		puts("\nFor more information on a specific command, type HELP command - name"
-			"\nCD             Displays the name of or changes the current directory."
-			"\nDIR            Displays a list of files and subdirectories in a directory."
-			"\nHELP           Provides Help information for Windows commands."
-			"\nMD             Creates a directory.\n"
-		);
-		return SUCCESS;
-
-	} else if (_stricmp(command, "cd") == 0) {
-		puts(	"\nDisplays the name of or changes the current directory.\n"
-			"CD[directory name]\nCD[..]\n"
-			"\n  ..   Specifies that you want to change to the parent directory.\n"
-			"\nType CD without parameters to display the current drive and directory.\n"
-		);
-		return SUCCESS;
-
-	} else if (_stricmp(command, "dir") == 0) {
-		puts("	\nDisplays a list of files and subdirectories in a directory.\n");
-		return SUCCESS;
-
-	} else if (_stricmp(command, "help") == 0) {
-		puts(	"\nProvides help information for Windows commands.\n"
-			"\nHELP [command]\n"
-			"\n    command - displays help information on that command.\n\n"
-		);
-		return SUCCESS;
-
-	} else if (_stricmp(command, "md") == 0) {
-		puts("	\nCreates a directory.\n"	
-			"\nMKDIR [drive:]path\nMD[drive:]path\n\n"
-		);
-		return SUCCESS;
-
-	} else {
-		puts("	\nThis command is not supported by the help utility.\n");
-		return FAILURE;
-	}
-}
-
-int MakeNewDirectory(TreeNode *currentDirectory, char *newDirectoryName)
-{
-	TreeNode *newDirectory = NULL;
-	TreeNode **tmp = NULL;
-
-	if (FindDirectory(currentDirectory, newDirectoryName) != NULL) {
-		printf("A subdirectory or file %s already exists.\n", newDirectoryName);
-		return FAILURE;
-	}
-
-	newDirectory = CreateNewTreeNode(); if (NULL == newDirectory) return FAILURE;
-	if (SetDirectoryName(newDirectory, newDirectoryName) == FAILURE) return FAILURE;
-
-	if (currentDirectory->child == NULL) {
-		currentDirectory->child = newDirectory;
-		return SUCCESS;
-	}
-
-	tmp = &currentDirectory->child;
-	while (*tmp != NULL && _stricmp((*tmp)->directoryName, newDirectoryName) < 0)
-		tmp = &(*tmp)->nextSibling;
-
-	newDirectory->nextSibling = *tmp;
-	*tmp = newDirectory;
-
-	return SUCCESS;
-}
-
-int PrintDirectory(TreeNode *currentDirectory)
-{
-	TreeNode *tmp = NULL;
-	int numDir = 0;
-
-	if (currentDirectory->child == NULL) {
-		printf("\n\t\t0 Dir(s)\n\n");
-		return SUCCESS;
-	}
-
-	tmp = currentDirectory->child;
-	
-	printf("\n");
-	while (tmp) {
-		printf("<DIR>          %s\n", tmp->directoryName);
-		numDir++;
-		tmp = tmp->nextSibling;
-	}
-	printf("\t\t%d Dir(s)\n\n", numDir);
-	
-	return SUCCESS;
-}
-
-int ChangeDirectory(TreeNode **currentDirectory, char *directoryName, char *path, StackNode *stackHead)
-{
-	TreeNode *tmp = NULL;
-
-	tmp = FindDirectory(*currentDirectory, directoryName);
-	if (tmp == NULL) {
-		printf("\nThe system cannot find the path specified.\n\n");
-		return FAILURE;
-	}
-
-	if (Push(stackHead, tmp) == FAILURE) return FAILURE;
-	*currentDirectory = tmp;
-	if (path[strlen(path) - 1] != '\\')
-		strcat(path, "\\");
-	strcat(path, directoryName);
-
-	return SUCCESS;
-}
-
-TreeNode *FindDirectory(TreeNode *currentDirectory, char *directoryName)
-{
-	TreeNode *tmp = NULL;
-
-	tmp = currentDirectory->child;
-	while (tmp) {
-		if (_strcmpi(tmp->directoryName, directoryName) == 0)
-			return tmp;
-
-		tmp = tmp->nextSibling;
-	}
-
-	return NULL;
-}
-
-int ReturnToPreviusDirectory(TreeNode **currentDirectory, TreeNode *rootDirectory, char *path, StackNode *stackHead)
-{
-	char *endOfPath = NULL;
-	TreeNode *dummy = NULL;
-	TreeNode *newCurrentDirectory = NULL;
-
-	Pop(stackHead, &dummy);
-	if(Pop(stackHead, &newCurrentDirectory) == FAILURE) {
-		*currentDirectory = rootDirectory;
-		strcpy(path, rootDirectory->directoryName);
-		strcat(path, "\\");
-		return SUCCESS;
-	}
-	*currentDirectory = newCurrentDirectory;
-	endOfPath = strrchr(path, '\\');
-	*endOfPath = '\0';
-
-	return SUCCESS;
-}
-
-int FreeBuffers(char *path, char *inputBuffer, char *command, char *commandArgument)
-{
-	free(path);
-	free(inputBuffer);
-	free(command);
-	free(commandArgument);
-
-	return SUCCESS;
-}
-
-int FreeTree(TreeNode *T)
-{
-	if (T == NULL) return;
-	FreeTree(T->child);
-	FreeTree(T->nextSibling);
-	free(T->directoryName);
-	free(T);
-
-	return SUCCESS;
-}
-
-int FreeStack(StackNode *S)
-{
-	if (S == NULL) return;
-	FreeStack(S->next);
-	free(S);
-
-	return SUCCESS;
-}
-
-int FreeAllMemory(char* path, char* inputBuffer, char* command, char* commandArgument, TreeNode* root, StackNode* stackHead)
-{
-	FreeBuffers(path, inputBuffer, command, command);
-	FreeStack(stackHead->next);
-	FreeTree(root->child);
 
 	return SUCCESS;
 }
