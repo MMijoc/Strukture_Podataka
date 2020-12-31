@@ -11,11 +11,9 @@
 
 int main()
 {
-	CreateNewBinTreeNode(5);
 	SelectMenu();
-	return 	SUCCESS;
+	return SUCCESS;
 }
-
 
 int PrintMenu()
 {
@@ -46,8 +44,6 @@ int SelectMenu()
 	int testNumbers[10] = {0};
 	int i = 0;
 
-
-
 	while (TRUE) {
 
 		PrintMenu();
@@ -62,11 +58,11 @@ int SelectMenu()
 		if (strcmp(select, "1") == 0) {
 			for (i = 0; i < 10; i++)
 				testNumbers[i] = rand() % 100;
-			for (int i = 0; i < 10; i++)
+			for (i = 0; i < 10; i++)
 				printf("%d ", testNumbers[i]);
 			puts("");
 
-			for (int i = 0; i < 10; i++)
+			for (i = 0; i < 10; i++)
 				InsertElement(&root, testNumbers[i]);
 
 		} else if (strcmp(select, "2") == 0) {
