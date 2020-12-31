@@ -39,17 +39,13 @@ int SelectMenu()
 {
 	BinTreeNode *root = NULL;
 	BinTreeNode *tmp = NULL;
-	char tmpBuffer[BUFFER_LENGTH] = {'\0'};
 	char inputBuffer[BUFFER_LENGTH] = {'\0'};
 	char select[BUFFER_LENGTH] = {'\0'};
 	int inputNumber = 0;
 	int argumentsTaken = 0;
-
-	// test data
-	int testNumbers[10];
+	int testNumbers[10] = {0};
 	int i = 0;
-	for (i = 0; i < 10; i++)
-		testNumbers[i] = rand() % 100;
+
 
 
 	while (TRUE) {
@@ -64,20 +60,14 @@ int SelectMenu()
 		} while (argumentsTaken < 0);
 
 		if (strcmp(select, "1") == 0) {
-
+			for (i = 0; i < 10; i++)
+				testNumbers[i] = rand() % 100;
 			for (int i = 0; i < 10; i++)
 				printf("%d ", testNumbers[i]);
 			puts("");
 
 			for (int i = 0; i < 10; i++)
 				InsertElement(&root, testNumbers[i]);
-
-
-			PrintTreeInorder(root);
-
-
-
-
 
 		} else if (strcmp(select, "2") == 0) {
 			inputNumber = InputIntegerFromUser("Enter the number you want to insert: ");
@@ -98,7 +88,7 @@ int SelectMenu()
 				printf("Binary tree is empty!");
 			
 		} else if (strcmp(select, "5") == 0) {
-			inputNumber = InputIntegerFromUser("Enter the number you want to search: ");
+			inputNumber = InputIntegerFromUser("Enter the value you want to search: ");
 			tmp = FindByValue(root, inputNumber);
 			if (tmp)
 				printf("Element with the value %d exists and it's address is %p", tmp->value, tmp);
@@ -106,29 +96,42 @@ int SelectMenu()
 				printf("Element with the value '%d' does not exist in this binary tree!", inputNumber);
 
 		} else if (strcmp(select, "6") == 0) {
-			
-		} else if (strcmp(select, "7") == 0) {
+			inputNumber = InputIntegerFromUser("Enter the value of the node you want to delete: ");
 			if (root)
-				PrintTreePreorder(root);
+				root = DeleteNode(root, inputNumber);
 			else
 				printf("The tree is empty!");
+
+		} else if (strcmp(select, "7") == 0) {
+			if (root) {
+				printf("Preorder print:");
+				PrintTreePreorder(root);
+			} else {
+				printf("The tree is empty!");
+			}
 
 		} else if (strcmp(select, "8") == 0) {
-			if (root)
+			if (root) {
+				printf("Inorder print:");
 				PrintTreeInorder(root);
-			else
+			} else {
 				printf("The tree is empty!");
+			}
 
 		} else if (strcmp(select, "9") == 0) {
-			if (root)
+			if (root) {
+				printf("Postorder print:");
 				PrintTreePostorder(root);
-			else
+			} else {
 				printf("The tree is empty!");
+			}
 
 		} else if (strcmp(select, "10") == 0) {
+			FreeBinTree(root);
+			root = NULL;
 
 		} else if (_stricmp(select, "exit") == 0) {
-			//free memory
+			FreeBinTree(root);
 			return SUCCESS;
 
 		} else {
@@ -136,7 +139,7 @@ int SelectMenu()
 		}
 
 		printf("\nPress any key to continue . . .");
-		fgets(tmpBuffer, BUFFER_LENGTH - 1, stdin);
+		fgets(select, BUFFER_LENGTH - 1, stdin);
 		system("cls");
 	}
 
@@ -158,9 +161,6 @@ BinTreeNode *CreateNewBinTreeNode(int value)
 		return NULL;
 	}
 }
-
-
-
 
 BinTreeNode *FindMaxValue(BinTreeNode *node)
 {
@@ -218,6 +218,38 @@ int InsertElement(BinTreeNode **node, int valueToInsert)
 	return SUCCESS;
 }
 
+BinTreeNode *DeleteNode(BinTreeNode *node, int value)
+{
+	if (node == NULL) {
+		printf("Element with the value '%d' does not exist ins this tree", value);
+		return node;
+	} else if (value > node->value) {
+		node->right = DeleteNode(node->right, value);
+	} else if (value < node->value) {
+		node->left = DeleteNode(node->left, value);
+	} else {
+		BinTreeNode* tmp = NULL;
+
+		if (node->left && node->right) {
+			tmp = FindMinValue(node->right);
+			node->value = tmp->value;
+			node->right = DeleteNode(node->right, tmp->value);
+
+		} else {
+			tmp = node;
+			if (node->right == NULL)
+				node = node->left;
+			else
+				node = node->right;
+			
+			free(tmp);
+		}
+
+	}
+
+	return node;
+}
+
 int PrintTreePreorder(BinTreeNode *node)
 {
 	if (node)
@@ -267,6 +299,16 @@ int InputIntegerFromUser(char *message)
 	} while (argumentsTaken != 1);
 
 	return inputNumber;
+}
+
+int FreeBinTree(BinTreeNode *node)
+{
+	if (node) {
+		FreeBinTree(node->left);
+		FreeBinTree(node->right);
+	}
+
+	return SUCCESS;
 }
 
 int PrintError(char *errorMessage)
