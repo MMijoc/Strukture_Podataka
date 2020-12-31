@@ -11,23 +11,31 @@
 
 int main()
 {
+	int executionStatus = SUCCESS;
 	char fileName[BUFFER_LENGTH];
-	char *postifx = NULL;
+	char *postfix = NULL;
 	BinTreeNode *root = NULL;
 
-	strcpy(fileName, "postfix");
-	postifx = GetFileContent(fileName);
-	if (postifx == NULL) return FAILURE;
+	ConsoleInput("Enter the name of the file from which postfix expression will be read: ", fileName, BUFFER_LENGTH);
+	postfix = GetFileContent(fileName);
+	if (postfix == NULL) return FAILURE;
 
-	printf("Postfix expression: %s\n", postifx);
-	CreateExpressionTree(&root, postifx);
-	printf("Infix expression:   ");
-	PrintTreeInorder(root);
-	puts("");
+	printf("Postfix expression: %s\n", postfix);
+
+	executionStatus = CreateExpressionTree(&root, postfix);
+	if (executionStatus == SUCCESS) {
+		printf("Infix expression:   ");
+		PrintTreeInorder(root, stdout);
+		puts("");
+		ConsoleInput("Enter the name of the file to which infix expression will be saved: ", fileName, BUFFER_LENGTH);
+		PrintExspressionTreeToFile(root, fileName);
+	} else {
+		printf("\nAn error occurred");
+	}
 
 	FreeBinTree(root);
-	free(postifx);
-	return SUCCESS;
+	free(postfix);
+	return 	SUCCESS;
 }
 
 char *GetFileContent(char *fileName)
@@ -121,7 +129,7 @@ int Pop(StackNode *stackHead, BinTreeNode **result)
 	StackNode *nodeToPop = NULL;
 
 	if (IsNull(2, "Invalid function parameters" ,stackHead, result)) return FAILURE;
-	
+
 	nodeToPop = stackHead->next;
 	if (NULL == nodeToPop)	return FAILURE;
 
@@ -143,48 +151,86 @@ int CreateExpressionTree(BinTreeNode **root, char *postfix)
 	while (*postfix != '\0' && executionStatus == SUCCESS) {
 		argTaken = sscanf(postfix, "%s%n", element, &n);
 
-		if (argTaken != 1) return FAILURE;
+		if (argTaken != 1) {
+			printf("Invalid postfix expression!");
+			executionStatus = FAILURE; 
+			break;
+		}
 
 		if (IsNnumber(element)) {
-			Push(&stack, CreateNewBinTreeNode(element));
+			executionStatus = Push(&stack, CreateNewBinTreeNode(element));
 		} else {
 			BinTreeNode * operatorNode = NULL;
 
-			argTaken = sscanf(postfix, "%s%n", element, &n);
-			
+			argTaken = sscanf(postfix, "%c%n", element, &n);
 
-			if (element[0] == ' ') {
+
+			if (element[0] == ' ' || element[0] == '\n') {
 				postfix += 1;
 				continue;
 			}
-			if (!IsValidOperator(element[0])) return FAILURE;
+			if (!IsValidOperator(element[0])) {
+				printf("Invalid operation");
+				executionStatus = FAILURE;
+				break;
+			}
 
 			operatorNode = CreateNewBinTreeNode(element); 
-			if (operatorNode == NULL) return FAILURE;
+			if (operatorNode == NULL) {
+				executionStatus = FAILURE; 
+				break;
+			}
 
-			executionStatus = Pop(&stack, &(operatorNode->right));
-			executionStatus = Pop(&stack, &(operatorNode->left));
+			if (Pop(&stack, &(operatorNode->right)) == FAILURE ||Pop(&stack, &(operatorNode->left)) == FAILURE) {
+				printf("Stack is empty -> invalid postfix expression");
+				executionStatus = FAILURE; 
+				break;
+			}
 
-			Push(&stack, operatorNode);
+			executionStatus = Push(&stack, operatorNode);
 		}
 
 		postfix += n;
 	}
 
+	if (executionStatus == FAILURE) {
+		FreeStack(stack.next);
+		return FAILURE;
+	}
+
 	Pop(&stack, root);
-	// error checking needs to be fixed
-	FreeStack(stack.next);
+
 	return SUCCESS;
 }
 
-int PrintTreeInorder(BinTreeNode *node)
+int PrintTreeInorder(BinTreeNode *node, FILE *fp)
 {
 	if (node) {
 
-		PrintTreeInorder(node->left);
-		printf("%s ", node->element);
-		PrintTreeInorder( node->right);
+		PrintTreeInorder(node->left, fp);
+		fprintf(fp, "%s ", node->element);
+		PrintTreeInorder( node->right, fp);
 	}
+
+	return SUCCESS;
+}
+
+int PrintExspressionTreeToFile(BinTreeNode *root, char *fileName)
+{
+	FILE *fp = NULL;
+
+	if (strstr(fileName, ".txt") == NULL)
+		strcat(fileName, ".txt");
+
+	fp = fopen(fileName, "w");
+	if (fp == NULL) {
+		perror("ERROR");
+		return FAILURE;
+	}
+
+	PrintTreeInorder(root, fp);
+
+	fclose(fp);
 
 	return SUCCESS;
 }
@@ -233,7 +279,6 @@ int IsValidOperator(char operation)
 	case '/':
 		break;
 	default:
-		printf("Invalid operation");
 		return FALSE;
 	}
 
@@ -258,4 +303,18 @@ int IsNull(int numberOfPointersPassed, char *errorMessage, ...)
 	va_end(args);
 
 	return FALSE;
+}
+
+int ConsoleInput(const char *message, char *buffer, size_t bufferSize)
+{
+	char *end;
+	if (message != NULL)
+		printf("%s", message);
+	memset(buffer, '\0', bufferSize);
+	fgets(buffer, bufferSize - 1, stdin);
+	end = strchr(buffer, '\n');
+	if (end)
+		*end = '\0';
+
+	return SUCCESS;
 }
