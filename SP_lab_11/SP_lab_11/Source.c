@@ -15,33 +15,82 @@
 
 int main()
 {
-	//HashTable hashTable[TABLE_SIZE];
-	//InitHashTable(hashTable, TABLE_SIZE);
+	return SelectMenu();
+}
 
+int PrintMenu()
+{
+	puts(	"1 - Fill hash table with test data"
+		"\n2 - Insert element to the hash table"
+		"\n3 - Print entire hash table"
+		"\n4 - Find ID by full name"
+		"\nexit - Exit program"
+	);
 
+	return SUCCESS;
+}
+
+int SelectMenu()
+{
 	HashTable *hashTable = NULL;
+	Person *tmp = NULL;
+	char inputBuffer[BUFFER_LENGTH] = {'\0'};
+	char select[BUFFER_LENGTH] = {'\0'};
+	char tmpFirstName[NAME_LENGTH] = {'\0'};
+	char tmpLastName[NAME_LENGTH] = {'\0'};
+	char tmpId[ID_LENGTH]  = {'\0'};
+	int executionStatus = SUCCESS;
+	int argumentsTaken = 0;
+
+
 	hashTable = CreateHashTable(TABLE_SIZE);
 	if (hashTable == NULL) return FAILURE;
 
+	while (TRUE) {
 
+		PrintMenu();
+		argumentsTaken = 0;
+		do {
+			printf("Choose: ");
+			fgets(inputBuffer, BUFFER_LENGTH, stdin);
+			argumentsTaken = sscanf(inputBuffer, "%s", select);
 
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Dennis", "Ritchie", "Dennis-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Bjarne", "Stroustrup", "Bjarne-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Linus", "Torvalds", "Linus-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Alan", "Turing", "Alan-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("John Ronald Reuel", "Tolkien", "JRR-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Christopher", "Tolkien", "Christopher-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Floor", "Jansen", "Floor-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Irene", "Jansen", "Irene-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Ahsoka", "Tano", "Ahsoka-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Tommy", "Karevik", "Tommy-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Quentin", "Tarantino", "Quentin-ID"));
-	HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson("Ardal", "aep Dahy", "Ardal-ID"));
+		} while (argumentsTaken < 0);
 
-	PrintTable(hashTable, TABLE_SIZE);
+		if (strcmp(select, "1") == 0) {
+			FillWithTestData(hashTable, TABLE_SIZE);
+		} else if (strcmp(select, "2") == 0) {
+			printf("\nEnter new person's first name, last name and Id:\n");
+			ConsoleInput("First name: ", tmpFirstName, NAME_LENGTH);
+			ConsoleInput("Last name: ", tmpLastName, NAME_LENGTH);
+			ConsoleInput("Id: ", tmpId, ID_LENGTH);
+			HashTableInsert(hashTable, TABLE_SIZE, CreateNewPerson(tmpFirstName, tmpLastName, tmpId));
+
+		} else if (strcmp(select, "3") == 0) {
+			PrintTable(hashTable, TABLE_SIZE);
+		} else if (strcmp(select, "4") == 0) {
+			printf("\nEnter the first and the last name of the person you are searching:\n");
+			ConsoleInput("First name: ", tmpFirstName, NAME_LENGTH);
+			ConsoleInput("Last name: ", tmpLastName, NAME_LENGTH);
+			tmp = HashTableLookup(hashTable, TABLE_SIZE, tmpFirstName, tmpLastName);
+			if (tmp)
+				PrintPerson(tmp);
+
+		} else if (_stricmp(select, "exit") == 0) {
+			FreeHashTable(hashTable, TABLE_SIZE);
+			return SUCCESS;
+
+		} else {
+			printf("\n\'%s' is not recognized as an valid command.\n", select);
+		}
+
+		printf("\nPress any key to continue . . .");
+		fgets(select, BUFFER_LENGTH - 1, stdin);
+		system("cls");
+	}
 
 	FreeHashTable(hashTable, TABLE_SIZE);
-	return SUCCESS;
+
 }
 
 Node *CreateNewNode(Person *person)
@@ -65,9 +114,9 @@ Person *CreateNewPerson(char *firstName, char *lastName, char *id)
 
 	newPerson = (Person *)malloc(sizeof(Person));
 	if (newPerson) {
-		strncpy(newPerson->firstName, firstName, NAME_LENGTH);
-		strncpy(newPerson->lastName, lastName, NAME_LENGTH);
-		strncpy(newPerson->id, id, ID_LENGTH);
+		strcpy(newPerson->firstName, firstName);
+		strcpy(newPerson->lastName, lastName);
+		strcpy(newPerson->id, id);
 		return newPerson;
 	} else {
 		PrintError("Memory allocation failed: unable to allocate memory for person");
@@ -109,8 +158,10 @@ int Hash(char *key, int tableSize)
 	int hashValue = 0;
 	int i = 0;
 
-	if (key == NULL || strlen(key) == 0 || tableSize <= 0)
+	if (key == NULL || strlen(key) == 0 || tableSize <= 0) {
+		PrintError("Invalid hash functions parameters");
 		return FAILURE;
+	}
 
 	for (i = 0; i < CHARS_HASHING && key[i] != '\0'; i++)
 		hashValue += key[i];
@@ -120,7 +171,9 @@ int Hash(char *key, int tableSize)
 
 int HashTableInsert(HashTable *table, int tableSize, Person *toInsert)
 {
-	int hashValue = 0;
+	int hashValue = -1;
+
+	if (IsNull(2, "Invalid functions arguments", table, toInsert) == TRUE) return FAILURE;
 
 	hashValue = Hash(toInsert->lastName, tableSize);
 	if (hashValue < 0) return FAILURE;
@@ -179,13 +232,13 @@ int PrintList(Node *listHead)
 	Node *tmp = listHead->next;
 
 	if (NULL == tmp) {
-		printf("EMPTY\n");
+		printf("  -->  EMPTY\n");
 		return FAILURE;
 	}
 
 	while (tmp) {
-		PrintPerson(tmp->person);
 		printf("  -->  ");
+		PrintPerson(tmp->person);
 		tmp = tmp->next;
 	}
 	printf("\n");
@@ -195,11 +248,45 @@ int PrintList(Node *listHead)
 
 int PrintPerson(Person *p)
 {
-	printf("\033[31m[%s - %s - %s]\033[0m", p->firstName, p->lastName, p->id);
+	printf("\033[94m[%s, %s, %s]\033[0m", p->firstName, p->lastName, p->id);
 	return SUCCESS;
 }
 
+Person *HashTableLookup(HashTable *table, int tableSize, char *firstName, char *lastName)
+{
+	int hashValue = -1;
 
+	if (IsNull(3, "Invalid functions arguments", table, firstName, lastName) == TRUE || tableSize < 0) return NULL;
+	if (strlen(firstName) == 0 ||strlen(lastName) == 0) {
+		printf("First and last name can not be empty!");
+		return NULL;
+	}
+
+	hashValue = Hash(lastName, tableSize);
+	if (hashValue < 0) return NULL;
+
+	return SearchList(&table[hashValue], firstName, lastName);
+}
+
+Person *SearchList(Node *listHead, char *firstName, char *lastName)
+{
+	Node *tmp = NULL;
+
+	if (IsNull(3, "Invalid functions arguments", listHead, firstName, lastName) == TRUE) return NULL;
+
+	tmp = listHead->next;
+	while (tmp)
+	{
+		if(_strcmpi(tmp->person->lastName, lastName) == 0 &&
+		   _strcmpi(tmp->person->firstName, firstName) == 0)
+			return tmp->person;
+
+		tmp = tmp->next;
+	}
+
+	printf("Person '%s %s' does not exit in this table", firstName, lastName);
+	return NULL;
+}
 
 int FreeHashTable(HashTable *table, int tableSize)
 {
@@ -229,22 +316,20 @@ int FreeList(Node *head)
 	return SUCCESS;
 }
 
-
-
 int PrintError(char *message)
 {
 	if(message == NULL) {
-		fprintf(stderr, "\nUnknown error occurred!");
+		fprintf(stderr, "\033[31m\nUnknown error occurred!\033[0m");
 		return SUCCESS;
 	}
-	fprintf(stderr, "\n%s", message);
+	fprintf(stderr, "\033[31m\n%s\033[0m", message);
 
 	return SUCCESS;
 }
 
 int ConsoleInput(const char *message, char *buffer, size_t bufferSize)
 {
-	char *end;
+	char *end = NULL;
 	if (message != NULL)
 		printf("%s", message);
 	memset(buffer, '\0', bufferSize);
@@ -267,11 +352,44 @@ int IsNull(int numberOfPointersPassed, char *errorMessage, ...)
 		void* ptr = va_arg(args, void *);
 		if (ptr == NULL) {
 			if (errorMessage)
-				fprintf(stderr, "\n%s", errorMessage);
+				fprintf(stderr, "\033[31m\n%s\033[0m", errorMessage);
 			return TRUE;
 		}
 	}
 	va_end(args);
 
 	return FALSE;
+}
+
+int FillWithTestData(HashTable *hashTable, int tableSize)
+{
+	if (hashTable == NULL ||tableSize <= 0) {
+		PrintError(NULL);
+		return FAILURE;
+	}
+
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Dennis", "Ritchie", "Dennis-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Bjarne", "Stroustrup", "Bjarne-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Linus", "Torvalds", "Linus-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Alan", "Turing", "Alan-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("John Ronald Reuel", "Tolkien", "JRR-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Christopher", "Tolkien", "Christopher-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Floor", "Jansen", "Floor-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Irene", "Jansen", "Irene-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Ahsoka", "Tano", "Ahsoka-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Tommy", "Karevik", "Tommy-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Quentin", "Tarantino", "Quentin-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Ardal", "aep Dahy", "Ardal-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Aurelije", "Augustin", "Aurelije-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Hansi", "Kursch", "Hansi-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Anthony Arjen", "Lucassen", "Anthony-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("James", "LaBrie", "James-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Pierre", "de Fermat", "Pierre-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Garrus", "Vakarian", "Garrus-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Christoph", "Waltz", "Christoph-ID"));
+	HashTableInsert(hashTable, tableSize, CreateNewPerson("Piet", "Mondrian", "Piet-ID"));
+
+	printf("Hash table successfully filed with 20 samples");
+
+	return SUCCESS;
 }

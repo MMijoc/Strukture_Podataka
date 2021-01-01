@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <conio.h> 
 
 #define SUCCESS 0
 #define FAILURE (-1)
@@ -29,6 +28,8 @@ typedef struct _node {
 } Node;
 typedef Node HashTable;
 
+int PrintMenu();
+int SelectMenu();
 Node *CreateNewNode(Person *person);
 Person *CreateNewPerson(char *firstName, char *lastName, char *id);
 HashTable *CreateHashTable(int tableSize);
@@ -39,13 +40,11 @@ int SortedInsert(Node *listHead, Person *personToInsert);
 int PrintTable(HashTable *table, int tableSize);
 int PrintList(Node *listHead);
 int PrintPerson(Person *p);
-
-int HashTableLookup();
-int HashTableDelete();
-
-int FreeList(Node *head);
+Person *HashTableLookup(HashTable *table, int tableSize, char *firstName, char *lastName);
+Person *SearchList(Node *listHead, char *firstName, char *lastName);
 int FreeHashTable(HashTable *table, int tableSize);
-
+int FreeList(Node *head);
 int PrintError(char *message);
 int ConsoleInput(const char *message, char *buffer, size_t bufferSize);
 int IsNull(int numberOfPointersPassed, char *errorMessage, ...);
+int FillWithTestData(HashTable *hashTable, int tableSize);
