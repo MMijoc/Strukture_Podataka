@@ -17,7 +17,7 @@ int main()
 
 int PrintMenu()
 {
-	puts(	"1 - Make new tree with random numbers"
+	puts(	"1 - Add 10 random numbers to the tree"
 		"\n2 - Insert element"
 		"\n3 - Find max value"
 		"\n4 - Find min value"
@@ -63,11 +63,11 @@ int SelectMenu()
 			puts("");
 
 			for (i = 0; i < 10; i++)
-				InsertElement(&root, testNumbers[i]);
+				root = InsertElement(root, testNumbers[i]);
 
 		} else if (strcmp(select, "2") == 0) {
 			inputNumber = InputIntegerFromUser("Enter the number you want to insert: ");
-			InsertElement(&root, inputNumber);
+			root = InsertElement(root, inputNumber);
 
 		} else if (strcmp(select, "3") == 0) {
 			tmp = FindMaxValue(root);
@@ -160,17 +160,18 @@ BinTreeNode *CreateNewBinTreeNode(int value)
 
 BinTreeNode *FindMaxValue(BinTreeNode *node)
 {
-	if (node && node->right) {
-		return FindMaxValue(node->right);
-	}
+	if (NULL == node) return NULL;
+	while (node->right)
+		node = node->right;
+
 	return node;
 }
 
 BinTreeNode *FindMinValue(BinTreeNode *node)
 {
-	if (node && node->left) {
-		return FindMinValue(node->left);
-	}
+	if (NULL == node) return NULL;
+	while (node->left)
+		node = node->left;
 
 	return node;
 }
@@ -192,26 +193,28 @@ BinTreeNode *FindByValue(BinTreeNode *node, int valueToFind)
 	return NULL;
 }
 
-int InsertElement(BinTreeNode **node, int valueToInsert)
+BinTreeNode* InsertElement(BinTreeNode *node, int valueToInsert)
 {
-	if (*node == NULL) {
+	if (NULL == node) {
 		BinTreeNode *nodeToInsert = NULL;
+
 		nodeToInsert = CreateNewBinTreeNode(valueToInsert);
-		if(nodeToInsert == NULL) return FAILURE;
-		*node = nodeToInsert;
-		return SUCCESS;
+		if(nodeToInsert == NULL)
+			return NULL;
 
-	} else if (valueToInsert < (*node)->value) {
-		InsertElement(&(*node)->left, valueToInsert);
+		return nodeToInsert;
 
-	} else if (valueToInsert > (*node)->value) {
-		InsertElement(&(*node)->right, valueToInsert);
+	} else if (valueToInsert < node->value) {
+		node->left = InsertElement(node->left, valueToInsert);
+
+	} else if (valueToInsert > node->value) {
+		node->right = InsertElement(node->right, valueToInsert);
 
 	} else {
 		printf("\nElement with the value '%d' already exists in the binary tree!", valueToInsert);
-		return FAILURE;
 	}
-	return SUCCESS;
+
+	return node;
 }
 
 BinTreeNode *DeleteNode(BinTreeNode *node, int value)

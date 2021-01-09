@@ -22,7 +22,7 @@ BinTreeNode *CreateNewBinTreeNode(int value);
 BinTreeNode *FindMaxValue(BinTreeNode *node);
 BinTreeNode *FindMinValue(BinTreeNode *node);
 BinTreeNode *FindByValue(BinTreeNode *node, int valueToFind);
-int InsertElement(BinTreeNode **node, int value);
+BinTreeNode *InsertElement(BinTreeNode *node, int valueToInsert);
 BinTreeNode *DeleteNode(BinTreeNode *root, int value);
 int PrintTreePreorder(BinTreeNode *node);
 int PrintTreePostorder(BinTreeNode *node);
