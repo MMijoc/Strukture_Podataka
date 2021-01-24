@@ -240,6 +240,7 @@ int FreeBinTree(BinTreeNode *node)
 	if (node) {
 		FreeBinTree(node->left);
 		FreeBinTree(node->right);
+		free(node);
 	}
 
 	return SUCCESS;
