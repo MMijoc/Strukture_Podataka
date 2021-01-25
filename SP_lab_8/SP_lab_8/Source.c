@@ -10,6 +10,7 @@
 
 #include "Source.h"
 
+
 int main()
 {
 	CommandLine();
@@ -82,6 +83,7 @@ int CommandLine()
 			PrintDirectory(currentDirectory);
 
 		} else if (_stricmp(command, "exit") == 0) {
+			free(rootDirectory.directoryName);
 			FreeAllMemory(path, inputBuffer, command, commandArgument, &rootDirectory, &stack);
 			return SUCCESS;
 
