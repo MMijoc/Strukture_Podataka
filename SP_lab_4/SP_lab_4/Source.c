@@ -40,7 +40,6 @@ int PrintError(char *message);
 
 int main()
 {
-
 	return SelectMenu();
 }
 
@@ -113,6 +112,11 @@ int SelectMenu()
 		
 		
 		} else if (_strcmpi(tmpBuffer, "exit") == 0) {
+			
+			DeleteList(&poly1);
+			DeleteList(&poly2);
+			DeleteList(&result1);
+			DeleteList(&result2);
 			return SUCCESS;
 		
 		} else {
@@ -125,7 +129,6 @@ int SelectMenu()
 		DeleteList(&result2);
 	
 	}
-
 
 	return FAILURE;
 }
