@@ -46,6 +46,7 @@ int main()
 	Pop(&myStack, &result);
 	printf("Result: %.3lf\n", result);
 
+	free(postfix);
 	return SUCCESS;
 }
 
