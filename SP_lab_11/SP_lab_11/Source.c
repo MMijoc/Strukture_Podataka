@@ -12,9 +12,14 @@
 #endif
 
 #include "Source.h"
+//For debugging memory leaks
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
 
 int main()
 {
+	//For debugging memory leaks
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	return SelectMenu();
 }
 
@@ -305,7 +310,8 @@ int FreeHashTable(HashTable *table, int tableSize)
 int FreeList(Node *head)
 {
 	Node *toFree = NULL;
-	Node* tmp = head->next;
+	Node* tmp = head;
+
 	while(tmp) {
 		toFree = tmp;
 		tmp = tmp->next;
