@@ -42,9 +42,9 @@ char *GetFileContent(char *fileName)
 {
 	char *fileContent = NULL;
 	FILE *fp = NULL;
-	int length = 0;
+	size_t length = 0;
 
-	if (strstr(fileName, ".txt") == NULL)
+	if (strchr(fileName, '.') == NULL)
 		strcat(fileName, ".txt");
 
 	fp = fopen(fileName, "r");
@@ -54,18 +54,17 @@ char *GetFileContent(char *fileName)
 	}
 
 	fseek(fp, 0, SEEK_END);
-	length = ftell(fp) + 1; // +1 for '\0'
+	length = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
 
-	fileContent = (char *)malloc(length * sizeof(char));
+	fileContent = (char *)calloc(length + 1, sizeof(char));
 	if (fileContent == NULL) {
 		fprintf(stderr, "\nMemory allocation failed");
 		return NULL;
 	}
+	fread(fileContent, sizeof(char), length, fp);
 
-	fseek(fp, 0, SEEK_SET);
-	fgets(fileContent, length, fp);
 	fclose(fp);
-
 	return fileContent;
 }
 
@@ -160,15 +159,15 @@ int CreateExpressionTree(BinTreeNode **root, char *postfix)
 		if (IsNnumber(element)) {
 			executionStatus = Push(&stack, CreateNewBinTreeNode(element));
 		} else {
-			BinTreeNode * operatorNode = NULL;
+			BinTreeNode *operatorNode = NULL;
 
 			argTaken = sscanf(postfix, "%c%n", element, &n);
-
 
 			if (element[0] == ' ' || element[0] == '\n') {
 				postfix += 1;
 				continue;
 			}
+
 			if (!IsValidOperator(element[0])) {
 				printf("Invalid operation");
 				executionStatus = FAILURE;
@@ -181,7 +180,7 @@ int CreateExpressionTree(BinTreeNode **root, char *postfix)
 				break;
 			}
 
-			if (Pop(&stack, &(operatorNode->right)) == FAILURE ||Pop(&stack, &(operatorNode->left)) == FAILURE) {
+			if (Pop(&stack, &(operatorNode->right)) == FAILURE || Pop(&stack, &(operatorNode->left)) == FAILURE) {
 				printf("Stack is empty -> invalid postfix expression");
 				executionStatus = FAILURE; 
 				break;
@@ -231,7 +230,6 @@ int PrintExspressionTreeToFile(BinTreeNode *root, char *fileName)
 	PrintTreeInorder(root, fp);
 
 	fclose(fp);
-
 	return SUCCESS;
 }
 
